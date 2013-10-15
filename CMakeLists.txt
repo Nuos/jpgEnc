@@ -26,6 +26,7 @@ set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
 find_package( Boost 1.54 ) #COMPONENTS date_time)
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(include)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP")
@@ -47,3 +48,6 @@ file(GLOB SOURCE_FILES_JPG_ENC "src/*.cpp")
 
 add_executable(jpgEnc ${INCLUDE_FILES_JPG_ENC} ${SOURCE_FILES_JPG_ENC}) 
 target_link_libraries( jpgEnc ${Boost_LIBRARIES} )
+
+# copy test files to 
+file(COPY test DESTINATION ${CMAKE_BINARY_DIR})
