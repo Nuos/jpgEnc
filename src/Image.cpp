@@ -1,22 +1,67 @@
 #include "Image.hpp"
 
-Image Image::convertToColorSpace(ColorSpace target_space) const {
-    // matrix factors
-    static const float Flat[] { .0f, 256/2.f, 256/2.f };
-    static const float Y[] {   .299f,   .587f,   .114f };
-    static const float Cb[] { -.1687f, -.3312f,  .5f };
-    static const float Cr[] {  .5f,    -.4186f, -.0813f };
+
+Image Image::convertToColorSpace(ColorSpace target_color_space) const {
+    // no converting if already in target color space
+    if (color_space_type == target_color_space)
+        return *this;
 
     Image converted(*this);
-    auto max = converted.width * converted.height;
-    for (uint x = 0; x < max; ++x) {
-        auto& r = R.at(x);
-        auto& g = G.at(x);
-        auto& b = B.at(x);
+    const auto num_pixel = converted.width * converted.height;
 
-        converted.Y.at(x)  = static_cast<Byte>(Flat[0] + ( Y[0] * r +  Y[1] * g +  Y[2] * b));
-        converted.Cb.at(x) = static_cast<Byte>(Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
-        converted.Cr.at(x) = static_cast<Byte>(Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
+    switch (target_color_space) {
+        case ColorSpace::YCbCr:
+            {
+                assert(color_space_type == ColorSpace::RGB);
+
+                // matrix factors
+                /*
+                  0.299  0.587  0.114
+                 -0.169 -0.331  0.500
+                  0.500 -0.419 -0.081
+                 */
+                static const float Flat[] { .0f, 256/2.f, 256/2.f };
+                static const float Yv[] {  .299f,   .587f,   .114f };
+                static const float Cb[] { -.1687f, -.3312f,  .5f };
+                static const float Cr[] {  .5f,    -.4186f, -.0813f };
+
+                for (uint x = 0; x < num_pixel; ++x) {
+                    auto& r = R.at(x);
+                    auto& g = G.at(x);
+                    auto& b = B.at(x);
+
+                    converted.Y.at(x)  = static_cast<Byte>(Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b));
+                    converted.Cb.at(x) = static_cast<Byte>(Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
+                    converted.Cr.at(x) = static_cast<Byte>(Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
+                }
+            }
+            break;
+        case ColorSpace::RGB:
+            {
+                assert(color_space_type == ColorSpace::YCbCr);
+
+                // matrix factors
+                /*
+                 1.000  0.000  1.402
+                 1.000 -0.344 -0.714
+                 1.000  1.772  0.000
+                */
+                static const float Flat[] { .0f, 256/2.f, 256/2.f };
+                static const float r[] {  1.f,  .0f,    1.402f };
+                static const float g[] {  1.f, -.344f,  -.714f };
+                static const float b[] {  1.f, 1.772f,   .0f };
+
+                for (uint x = 0; x < num_pixel; ++x) {
+                    auto y  =  Y.at(x) - Flat[0];
+                    auto cb = Cb.at(x) - Flat[1];
+                    auto cr = Cr.at(x) - Flat[2];
+
+                    converted.Y.at(x)  = static_cast<Byte>(r[0] * y + r[1] * cb + r[2] * cr);
+                    converted.Cb.at(x) = static_cast<Byte>(g[0] * y + g[1] * cb + g[2] * cr);
+                    converted.Cr.at(x) = static_cast<Byte>(b[0] * y + b[1] * cb + b[2] * cr);
+                }
+            }
+            break;
     }
     return converted;
 }

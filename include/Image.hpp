@@ -15,14 +15,54 @@ typedef uint8_t Byte;
 
 struct Channel
 {
-    const uint width, height;
+    uint width, height;
     std::vector<Byte> pixels;
 
+    // ctor
     Channel(uint w, uint h)
         : width{w},
         height{h}
     {
         pixels.reserve(width*height);
+        std::cout << "Channel::Channel()" << std::endl;
+    }
+
+    // copy ctor
+    Channel(const Channel& other)
+        : pixels(other.pixels),
+        width(other.width), height(other.height)
+    {
+        std::cout << "Channel::Channel(Channel&)" << std::endl;
+    }
+
+    // move ctor
+    Channel(Channel&& other)
+        : pixels(std::move(other.pixels)),
+        width(other.width), height(other.height)
+    {
+        std::cout << "Channel::Channel(Channel&&)" << std::endl;
+    }
+
+    // assignment
+    Channel& operator=(const Channel &other) {
+        if (this != &other) {
+            pixels = other.pixels;
+            width  = other.width;
+            height = other.height;
+            std::cout << "Channel::operator=(Channel&)" << std::endl;
+        }
+        return *this;
+    }
+
+    // move assignment
+    Channel& operator=(Channel &&other) {
+        if (this != &other) {
+            pixels = std::move(other.pixels);
+            width  = other.width;
+            height = other.height;
+            std::cout << "Channel::operator=(Channel&)" << std::endl;
+        }
+        return *this;
     }
 
     // for one-dimensional indexing
@@ -57,7 +97,7 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image()" << std::endl;
+        std::cout << "Image::Image()\n" << std::endl;
     }
 
     // copy ctor
@@ -68,9 +108,10 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image(Image&)" << std::endl;
+        std::cout << "Image::Image(Image&)\n" << std::endl;
     }
 
+    // move ctor
     Image(Image&& other)
         : color_space_type(other.color_space_type),
         width(other.width), height(other.height),
@@ -78,7 +119,35 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image(Image&&)" << std::endl;
+        std::cout << "Image::Image(Image&&)\n" << std::endl;
+    }
+
+    // assignment
+    Image& operator=(const Image &other) {
+        if (this != &other) {
+            one = other.one;
+            two = other.two;
+            three = other.three;
+            width = other.width;
+            height = other.height;
+            color_space_type = other.color_space_type;
+            std::cout << "Image::operator=(Image&)\n" << std::endl;
+        }
+        return *this;
+    }
+
+    // move assignment
+    Image& operator=(Image &&other) {
+        if (this != &other) {
+            one = std::move(other.one);
+            two = std::move(other.two);
+            three = std::move(other.three);
+            width = other.width;
+            height = other.height;
+            color_space_type = other.color_space_type;
+            std::cout << "Image::operator=(Image&&)\n" << std::endl;
+        }
+        return *this;
     }
 
     // returns a new image object, this object won't be modified
