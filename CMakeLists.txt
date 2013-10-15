@@ -12,12 +12,20 @@ add_definitions(-DUNICODE -D_UNICODE)
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
+
+if(${CMAKE_SIZEOF_VOID_P} MATCHES "8")
+message("Building for x64...")
+set(BOOST_LIBRARYDIR "$ENV{BOOST_ROOT}/lib/x64/")
+message("Searching boost x64 libs in '$ENV{BOOST_ROOT}/lib/x64/'")
+endif()
+
 find_package( Boost 1.54 COMPONENTS unit_test_framework REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(include)
 
 # Visual studio stuff
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
+  message("Setting Visual C++ Flags")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Zi /GL /Oi /Ot /Ox /fp:fast")
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG")
