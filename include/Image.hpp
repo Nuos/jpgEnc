@@ -13,6 +13,8 @@
 typedef unsigned int uint;
 typedef uint8_t Byte;
 
+static const auto debug = false;
+
 struct Channel
 {
     uint width, height;
@@ -24,7 +26,7 @@ struct Channel
         height{h}
     {
         pixels.reserve(width*height);
-        std::cout << "Channel::Channel()" << std::endl;
+        if (debug) std::cout << "Channel::Channel()" << std::endl;
     }
 
     // copy ctor
@@ -32,7 +34,7 @@ struct Channel
         : pixels(other.pixels),
         width(other.width), height(other.height)
     {
-        std::cout << "Channel::Channel(Channel&)" << std::endl;
+        if (debug) std::cout << "Channel::Channel(Channel&)" << std::endl;
     }
 
     // move ctor
@@ -40,7 +42,7 @@ struct Channel
         : pixels(std::move(other.pixels)),
         width(other.width), height(other.height)
     {
-        std::cout << "Channel::Channel(Channel&&)" << std::endl;
+        if (debug) std::cout << "Channel::Channel(Channel&&)" << std::endl;
     }
 
     // assignment
@@ -49,7 +51,7 @@ struct Channel
             pixels = other.pixels;
             width  = other.width;
             height = other.height;
-            std::cout << "Channel::operator=(Channel&)" << std::endl;
+            if (debug) std::cout << "Channel::operator=(Channel&)" << std::endl;
         }
         return *this;
     }
@@ -60,7 +62,7 @@ struct Channel
             pixels = std::move(other.pixels);
             width  = other.width;
             height = other.height;
-            std::cout << "Channel::operator=(Channel&)" << std::endl;
+            if (debug) std::cout << "Channel::operator=(Channel&)" << std::endl;
         }
         return *this;
     }
@@ -97,7 +99,7 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image()\n" << std::endl;
+        if (debug) std::cout << "Image::Image()\n" << std::endl;
     }
 
     // copy ctor
@@ -108,7 +110,7 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image(Image&)\n" << std::endl;
+        if (debug) std::cout << "Image::Image(Image&)\n" << std::endl;
     }
 
     // move ctor
@@ -119,7 +121,7 @@ public:
         Y(one), Cb(two), Cr(three),
         R(one), G(two), B(three)
     {
-        std::cout << "Image::Image(Image&&)\n" << std::endl;
+        if (debug) std::cout << "Image::Image(Image&&)\n" << std::endl;
     }
 
     // assignment
@@ -131,7 +133,7 @@ public:
             width = other.width;
             height = other.height;
             color_space_type = other.color_space_type;
-            std::cout << "Image::operator=(Image&)\n" << std::endl;
+            if (debug) std::cout << "Image::operator=(Image&)\n" << std::endl;
         }
         return *this;
     }
@@ -145,7 +147,7 @@ public:
             width = other.width;
             height = other.height;
             color_space_type = other.color_space_type;
-            std::cout << "Image::operator=(Image&&)\n" << std::endl;
+            if (debug) std::cout << "Image::operator=(Image&&)\n" << std::endl;
         }
         return *this;
     }

@@ -1,33 +1,22 @@
 cmake_minimum_required (VERSION 2.8.9)
 
-project(jpgEnc CXX)
+set(PROJECT_NAME jpgEnc)
+set(PROJECT_LIB jpgEncLib)
+set(PROJECT_TEST jpgEncTest)
+project(${PROJECT_NAME} CXX)
 
 # unicode build
 add_definitions(-DUNICODE -D_UNICODE)
 
-# set output directories
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) # executables
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin) # shared libs (dll)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib) # static libs
-
-# This is for multi-config builds (e.g. msvc)
-foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
-    string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-    set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/bin )
-    set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/bin )
-    set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_BINARY_DIR}/lib )
-endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
-# CMAKE_BINARY_DIR: The path to the top level of the build tree.
-# CMAKE_SOURCE_DIR: The path to the top level of the source tree.
-
+# boost
 set(Boost_USE_STATIC_LIBS        ON)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
-find_package( Boost 1.54 ) #COMPONENTS date_time)
+find_package( Boost 1.54 COMPONENTS unit_test_framework REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(include)
 
+# Visual studio stuff
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Zi /GL /Oi /Ot /Ox /fp:fast")
@@ -43,11 +32,7 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
 
 endif()
 
-file(GLOB INCLUDE_FILES_JPG_ENC "include/*.h" "include/*.hpp")
-file(GLOB SOURCE_FILES_JPG_ENC "src/*.cpp")
+add_subdirectory(src)
 
-add_executable(jpgEnc ${INCLUDE_FILES_JPG_ENC} ${SOURCE_FILES_JPG_ENC}) 
-target_link_libraries( jpgEnc ${Boost_LIBRARIES} )
-
-# copy test files to 
-file(COPY test DESTINATION ${CMAKE_BINARY_DIR})
+# copy test files to binary dir
+file(COPY res DESTINATION ${CMAKE_BINARY_DIR})
