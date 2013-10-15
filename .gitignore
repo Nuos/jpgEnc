@@ -1,0 +1,7 @@
+# VS specifics
+*.suo
+*.user
+*.aps
+
+# build output
+/build*
