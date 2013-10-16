@@ -11,6 +11,6 @@ add_library(${PROJECT_LIB} ${INCLUDE_FILES_JPG_ENC} ${SOURCE_FILES_JPG_ENC})
 
 # Main executable project files
 add_executable(${PROJECT_NAME} "main.cpp")
-target_link_libraries(${PROJECT_LIB})
+target_link_libraries(${PROJECT_NAME} ${PROJECT_LIB})
 
 add_subdirectory(test)

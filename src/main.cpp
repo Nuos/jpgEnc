@@ -19,5 +19,9 @@ int main(int argc, char argv[]) {
         std::cout << x << "\n";
     }
 
+    auto img = loadPPM("test/res/tester_p3.ppm");
+
+    std::cout << "w:h:color\t" << img.width << ":" << img.height << ":" << std::endl;
+
     return 0;
 }

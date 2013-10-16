@@ -41,6 +41,3 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
 endif()
 
 add_subdirectory(src)
-
-# copy test files to binary dir
-file(COPY res DESTINATION ${CMAKE_BINARY_DIR})
