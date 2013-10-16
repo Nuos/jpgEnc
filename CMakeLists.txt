@@ -26,6 +26,7 @@ include_directories(include)
 # Visual studio stuff
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio")
   message("Setting Visual C++ Flags")
+  add_definitions(-D_SCL_SECURE_NO_WARNINGS)
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MP")
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MP /Zi /GL /Oi /Ot /Ox /fp:fast")
   SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG")
