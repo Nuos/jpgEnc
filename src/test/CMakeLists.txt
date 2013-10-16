@@ -1,6 +1,8 @@
 # Test project files
 set(SOURCE_FILES_TEST
-    "ImageTest.cpp"
+    common.cpp
+    ImageTest.cpp
+    BitstreamTest.cpp
     )
 
 add_executable(${PROJECT_TEST} ${SOURCE_FILES_TEST}) 

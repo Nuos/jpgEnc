@@ -3,5 +3,8 @@
 *.user
 *.aps
 
+# windows shortcuts :D
+*.lnk
+
 # build output
 /build*
