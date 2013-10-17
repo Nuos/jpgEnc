@@ -2,9 +2,7 @@
 
 #include <cstdint>
 #include <vector>
-#include <deque>
 #include <initializer_list>
-#include <algorithm>
 #include <ostream>
 #include <istream>
 
@@ -21,15 +19,16 @@ public:
 
     class BitView
     {
+
         friend class Bitstream_Generic<BlockType>;
-        BitView(ContainerType& bstream, size_t block_idx, uint8_t bit_idx)
+        BitView(ContainerType& bstream, unsigned int block_idx, uint8_t bit_idx)
             : bits(bstream),
             block_index(block_idx),
             bit_index(bit_idx)
         {}
 
         ContainerType& bits;
-        const size_t block_index;
+        const unsigned int block_index;
         const uint8_t bit_index;
 
     public:
@@ -167,7 +166,7 @@ size_t Bitstream_Generic<BlockType>::size() const
 
 template<typename BlockType>
 typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::operator[](unsigned int pos) {
-    auto block_idx = pos / block_size;
+    auto block_idx = static_cast<unsigned int>(pos / block_size);
     auto bit_idx = static_cast<uint8_t>(block_size - (pos - block_idx * block_size) - 1);
 
     return BitView(bits, block_idx, bit_idx);

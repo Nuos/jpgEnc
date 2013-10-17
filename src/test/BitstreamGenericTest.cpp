@@ -3,7 +3,6 @@
 #include <iostream>
 #include <chrono>
 #include <fstream>
-#include <boost/dynamic_bitset.hpp>
 
 #include "BitstreamGeneric.hpp"
 

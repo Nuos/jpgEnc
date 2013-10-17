@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Image.hpp"
+#include "BitstreamGeneric.hpp"
 
 int add(int i, int j) { return i+j; }
 
