@@ -71,6 +71,7 @@ public:
     // appending bits
     Bitstream_Generic& operator<<(bool val);
     Bitstream_Generic& operator<<(std::initializer_list<bool> args);
+    Bitstream_Generic& push_back(bool val);
 
     // streaming
     template<typename BlockType>
@@ -138,6 +139,13 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(std::init
     //          then use operator<<(BlockType) if enough bits are available
     for (auto& bit : args)
         *this << bit;
+    return *this;
+}
+
+template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back(bool val)
+{
+    *this << val;
     return *this;
 }
 

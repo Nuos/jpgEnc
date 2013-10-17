@@ -6,13 +6,9 @@
 
 #include "BitstreamGeneric.hpp"
 
-#if _DEBUG
-const auto writes = 1e4;
-#else
-const auto writes = 1e7;
-#endif
+const auto writes = 1e3;
 
-BOOST_AUTO_TEST_CASE(test_own_bitstream_long)
+BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
 {
     // PERF TESTS
     {
@@ -92,7 +88,7 @@ BOOST_AUTO_TEST_CASE(test_own_bitstream_long)
 
         // assigning bits
         b0[0] = false;
-        b0[8] = true;
+        b0[8] = 1;
         BOOST_CHECK(b0[0] == false);
         BOOST_CHECK(b0[8] == true);
         BOOST_CHECK_EQUAL(b0.size(), 10);

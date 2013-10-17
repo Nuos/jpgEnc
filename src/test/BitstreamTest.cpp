@@ -7,11 +7,7 @@
 
 #include "Bitstream.hpp"
 
-#if _DEBUG
-const auto writes = 1e4;
-#else
-const auto writes = 1e7;
-#endif
+const auto writes = 1e3;
 
 BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
 {
@@ -65,7 +61,6 @@ BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
     BOOST_CHECK_EQUAL(in[12], false);
     BOOST_CHECK_EQUAL(in.size(), writes);
 }
-
 
 BOOST_AUTO_TEST_CASE(test_own_bitstream)
 {
