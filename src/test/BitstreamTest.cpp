@@ -32,6 +32,15 @@ BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
     std::cout << "Adding " << writes << " bits: " << duration_cast<milliseconds>(end - start).count() << " ms\n";
     std::cout << "Bitset size: " << bitset.size() << " elements\n";
 
+    // reading all bits
+    start = high_resolution_clock::now();
+    unsigned long long sum = 0;
+    for (auto i = 0U; i < bitset.size(); ++i) {
+        sum += bitset[i];
+    }
+    end = high_resolution_clock::now();
+    std::cout << "Counted " << sum << " active bits in " << duration_cast<milliseconds>(end - start).count() << " ms\n";
+
     start = high_resolution_clock::now();
     {
         std::ofstream bitset_out("saved_bitset", std::fstream::binary);
@@ -76,6 +85,15 @@ BOOST_AUTO_TEST_CASE(test_own_bitstream)
 
     std::cout << "Adding " << writes << " bits: " << duration_cast<milliseconds>(end - start).count() << " ms\n";
     std::cout << "Bitset size: " << bitset.size() << " elements\n";
+
+    // reading all bits
+    start = high_resolution_clock::now();
+    unsigned long long sum = 0;
+    for (auto i = 0U; i < bitset.size(); ++i) {
+        sum += bitset[i];
+    }
+    end = high_resolution_clock::now();
+    std::cout << "Counted " << sum << " active bits in " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 
     start = high_resolution_clock::now();
     {
