@@ -3,6 +3,7 @@ set(SOURCE_FILES_TEST
     common.cpp
     ImageTest.cpp
     BitstreamTest.cpp
+    BitstreamLongTest.cpp
     )
 
 add_executable(${PROJECT_TEST} ${SOURCE_FILES_TEST}) 

@@ -7,7 +7,11 @@
 
 #include "Bitstream.hpp"
 
+#if _DEBUG
+const auto writes = 1e4;
+#else
 const auto writes = 1e7;
+#endif
 
 BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
 {
@@ -20,7 +24,7 @@ BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
     bool val = false;
     auto start = high_resolution_clock::now();
     for (int x = 0; x < writes; ++x) {
-        if (!(x % 5)) val = !val;
+        if (!(x % 4)) val = !val;
         bitset.push_back(val);
     }
     auto end = high_resolution_clock::now();
@@ -44,10 +48,13 @@ BOOST_AUTO_TEST_CASE(test_boost_dynamic_bitset)
     std::cout << "Writing to and reading from file: " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 
     BOOST_CHECK_EQUAL(in[0], true);
-    BOOST_CHECK_EQUAL(in[4], true);
-    BOOST_CHECK_EQUAL(in[5], false);
-    BOOST_CHECK_EQUAL(in[9], false);
-    BOOST_CHECK_EQUAL(in[10], true);
+    BOOST_CHECK_EQUAL(in[3], true);
+    BOOST_CHECK_EQUAL(in[4], false);
+    BOOST_CHECK_EQUAL(in[7], false);
+    BOOST_CHECK_EQUAL(in[8], true);
+    BOOST_CHECK_EQUAL(in[11], true);
+    BOOST_CHECK_EQUAL(in[12], false);
+    BOOST_CHECK_EQUAL(in.size(), writes);
 }
 
 
@@ -62,7 +69,7 @@ BOOST_AUTO_TEST_CASE(test_own_bitstream)
     bool val = false;
     auto start = high_resolution_clock::now();
     for (int x = 0; x < writes; ++x) {
-        if (!(x % 5)) val = !val;
+        if (!(x % 4)) val = !val;
         bitset << val; // or bitset.push_back(val)
     }
     auto end = high_resolution_clock::now();
@@ -86,8 +93,11 @@ BOOST_AUTO_TEST_CASE(test_own_bitstream)
     std::cout << "Writing to and reading from file: " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 
     BOOST_CHECK_EQUAL(in[0], true);
-    BOOST_CHECK_EQUAL(in[4], true);
-    BOOST_CHECK_EQUAL(in[5], false);
-    BOOST_CHECK_EQUAL(in[9], false);
-    BOOST_CHECK_EQUAL(in[10], true);
+    BOOST_CHECK_EQUAL(in[3], true);
+    BOOST_CHECK_EQUAL(in[4], false);
+    BOOST_CHECK_EQUAL(in[7], false);
+    BOOST_CHECK_EQUAL(in[8], true);
+    BOOST_CHECK_EQUAL(in[11], true);
+    BOOST_CHECK_EQUAL(in[12], false);
+    BOOST_CHECK_EQUAL(in.size(), writes);
 }

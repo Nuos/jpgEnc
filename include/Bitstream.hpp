@@ -68,7 +68,7 @@ std::istream& operator>>(std::istream& in, Bitstream& bitstream)
 {
     uint8_t b;
     while (in >> b)
-        bitstream << b;
+        bitstream << (b != 0);
     return in;
 }
 
