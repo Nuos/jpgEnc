@@ -8,25 +8,27 @@
 #include <ostream>
 #include <istream>
 
-// BitstreamL[0] is the least significant bit (LSB)
-// Bitsream[BitstreamL.size()-1] is the most significant bit (MSB)
-class BitstreamL
+// Bitstream_Generic[0] is the least significant bit (LSB)
+// Bitsream[Bitstream_Generic.size()-1] is the most significant bit (MSB)
+template <typename BlockType>
+class Bitstream_Generic
 {
 public:
     friend class BitView;
-    typedef uint64_t BlockType;
     static const auto block_size = sizeof(BlockType) * 8;
+
+    typedef std::vector<BlockType> ContainerType;
 
     class BitView
     {
-        friend class BitstreamL;
-        BitView(std::deque<BlockType>& bstream, size_t block_idx, uint8_t bit_idx)
+        friend class Bitstream_Generic<BlockType>;
+        BitView(ContainerType& bstream, size_t block_idx, uint8_t bit_idx)
             : bits(bstream),
             block_index(block_idx),
             bit_index(bit_idx)
         {}
 
-        std::deque<BlockType>& bits;
+        ContainerType& bits;
         const size_t block_index;
         const uint8_t bit_index;
 
@@ -53,27 +55,29 @@ public:
     };
 
 private:
-    std::deque<BlockType> bits;
+    ContainerType bits;
     uint8_t bit_idx;
     size_t sz;
 
 private:
     // appending Blocks, don't let the user see this as it needs proper alignment,
     // only used for reading in a file 
-    BitstreamL& operator<<(BlockType val);
+    Bitstream_Generic& operator<<(BlockType val);
 
 public:
     // ctors
-    BitstreamL();
-    BitstreamL(std::initializer_list<bool> args);
+    Bitstream_Generic();
+    Bitstream_Generic(std::initializer_list<bool> args);
 
     // appending bits
-    BitstreamL& operator<<(bool val);
-    BitstreamL& operator<<(std::initializer_list<bool> args);
+    Bitstream_Generic& operator<<(bool val);
+    Bitstream_Generic& operator<<(std::initializer_list<bool> args);
 
     // streaming
-    friend std::ostream& operator<<(std::ostream& out, const BitstreamL& bitstream);
-    friend std::istream& operator>>(std::istream& in, BitstreamL& bitstream);
+    template<typename BlockType>
+    friend std::ostream& operator<<(std::ostream& out, const Bitstream_Generic<BlockType>& bitstream);
+    template<typename BlockType>
+    friend std::istream& operator>>(std::istream& in, Bitstream_Generic<BlockType>& bitstream);
 
     // accessing
     BitView operator[](unsigned int pos);
@@ -85,19 +89,22 @@ public:
 //
 // Implementation
 //
-BitstreamL::BitstreamL()
+template<typename BlockType>
+Bitstream_Generic<BlockType>::Bitstream_Generic()
 : bit_idx(block_size),
 bits(),
 sz(0)
 {}
 
-BitstreamL::BitstreamL(std::initializer_list<bool> args)
-: BitstreamL()
+template<typename BlockType>
+Bitstream_Generic<BlockType>::Bitstream_Generic(std::initializer_list<bool> args)
+: Bitstream_Generic()
 {
     *this << args;
 }
 
-BitstreamL& BitstreamL::operator<<(bool val)
+template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(bool val)
 {
     // make bit stream longer if we run out of space
     if (bit_idx >= block_size) {
@@ -117,14 +124,16 @@ BitstreamL& BitstreamL::operator<<(bool val)
     return *this;
 }
 
-BitstreamL& BitstreamL::operator<<(BlockType val)
+template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(BlockType val)
 {
     bits.push_back(val);
     sz += block_size;
     return *this;
 }
 
-BitstreamL& BitstreamL::operator<<(std::initializer_list<bool> args)
+template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(std::initializer_list<bool> args)
 {
     // todo: perf improve: use operator<<(bool) as long as the block is not aligned
     //          then use operator<<(BlockType) if enough bits are available
@@ -133,29 +142,42 @@ BitstreamL& BitstreamL::operator<<(std::initializer_list<bool> args)
     return *this;
 }
 
-std::ostream& operator<<(std::ostream& out, const BitstreamL& bitstream)
+template<typename BlockType>
+std::ostream& operator<<(std::ostream& out, const Bitstream_Generic<BlockType>& bitstream)
 {
     for (const auto& bit : bitstream.bits)
         out.write((const char*)&bit, sizeof(bit));
     return out;
 }
 
-std::istream& operator>>(std::istream& in, BitstreamL& bitstream)
+template<typename BlockType>
+std::istream& operator>>(std::istream& in, Bitstream_Generic<BlockType>& bitstream)
 {
-    BitstreamL::BlockType b = 0;
+    BlockType b = 0;
     while (in.read((char*) &b, sizeof(b)))
         bitstream << b;
     return in;
 }
 
-size_t BitstreamL::size() const
+template<typename BlockType>
+size_t Bitstream_Generic<BlockType>::size() const
 {
     return sz;
 }
 
-BitstreamL::BitView BitstreamL::operator[](unsigned int pos) {
+template<typename BlockType>
+typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::operator[](unsigned int pos) {
     auto block_idx = pos / block_size;
     auto bit_idx = static_cast<uint8_t>(block_size - (pos - block_idx * block_size) - 1);
 
     return BitView(bits, block_idx, bit_idx);
 }
+
+// Convenience typedefs
+typedef Bitstream_Generic<uint8_t> Bitstream8;
+typedef Bitstream_Generic<uint16_t> Bitstream16;
+typedef Bitstream_Generic<uint32_t> Bitstream32;
+typedef Bitstream_Generic<uint64_t> Bitstream64;
+typedef Bitstream64 Bitstream;
+
+typedef std::initializer_list<bool> Bits;
