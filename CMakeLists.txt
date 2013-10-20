@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.9)
+cmake_minimum_required (VERSION 2.8.11.2)
 
 set(PROJECT_NAME jpgEnc)
 set(PROJECT_LIB jpgEncLib)
