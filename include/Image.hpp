@@ -73,6 +73,8 @@ struct Channel
     }
 
     // for two-dimensional indexing
+    // stops at pixel border, so no out-of-bounds indexing possible
+    // practically duplicates pixel at the border 
     Byte& at(uint x, uint y) {
         x = std::min(x, width-1);
         y = std::min(y, height-1);
@@ -152,8 +154,21 @@ public:
         return *this;
     }
 
+    enum SubsamplingMode
+    {
+        S444,       // full sampling
+        S422,       // every second pixel in a row
+        S411,       // every fourth pixel in a row
+        S420,       // every second pixel in every second row
+        S420_m,     // between vertical and horizontal pixels
+        S420_lm,    // between vertical pixels
+    };
+
     // returns a new image object, this object won't be modified
     Image convertToColorSpace(ColorSpace target_space) const;
+
+    // apply subsampling to the color channels (Cb, Cr)
+    void applySubsampling(SubsamplingMode mode);
 
     uint width, height;
     Channel &R, &G, &B;

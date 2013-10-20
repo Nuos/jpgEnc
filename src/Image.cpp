@@ -66,6 +66,168 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
     return converted;
 }
 
+struct Mat
+{
+    std::vector<Byte> row;
+    bool scanline_jump = false;
+
+    Mat() {}
+
+    Mat(std::vector<Byte>&& r1, bool _scanline_jump)
+        : row(std::move(r1))
+    {
+        scanline_jump = _scanline_jump;
+    }
+};
+
+void Image::applySubsampling(SubsamplingMode mode)
+{
+    //enum SubsamplingMode
+    //{
+    //    S444,       // full sampling
+    //    S422,       // every second pixel in a row
+    //    S411,       // every fourth pixel in a row
+    //    S420,       // every second pixel in every second row
+    //    S420_lm,    // between vertical pixels
+    //    S420_m      // between vertical and horizontal pixels
+    //};
+
+    bool averaging = false;
+    
+    int vert_res_div = 1;
+    int hor_res_div = 1;
+
+    Mat mat;
+
+    switch (mode) {
+        case Image::S444:
+            // no subsampling
+            // xx xx
+            // xx xx
+            return;
+            break;
+        case Image::S422:
+            // x- x-
+            // x- x-
+            mat = Mat{{1, 0}, false};
+
+            vert_res_div = 1;
+            hor_res_div = 2;
+            break;
+        case Image::S411:
+            // x- --
+            // x- --
+            mat = Mat{{1, 0, 0, 0}, false};
+
+            vert_res_div = 1;
+            hor_res_div = 4;
+            break;
+        case Image::S420:
+            // x- x-
+            // -- --
+            mat = Mat{{1, 0}, true};
+
+            vert_res_div = 2;
+            hor_res_div = 2;
+            break;
+        case Image::S420_m:
+            // like S420, but taking the mean in vertical and horizontal direction
+            // ++ ++
+            // ++ ++
+            mat = Mat{{1, 1}, false};
+
+            vert_res_div = 2;
+            hor_res_div = 2;
+            averaging = true;
+            break;
+        case Image::S420_lm:
+            // like S420, but taking the mean only in vertical direction
+            // +- +-
+            // +- +-
+            mat = Mat{{1, 0}, false};
+
+            vert_res_div = 2;
+            hor_res_div = 2;
+            averaging = true;
+            break;
+        default:
+            break;
+    }
+
+    // subsampling Cr channel
+    {
+        Channel new_chan(Cr.width / hor_res_div, Cr.height / vert_res_div);
+        auto& chan = Cr;
+
+        // subsample Cr channel
+        for (auto y = 0U; y < chan.height; y += 2) {
+            for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                auto pix_val = 0;
+                for (auto m = 0U; m < mat.row.size(); ++m) {
+                    pix_val += mat.row[m] * chan.at(x + m, y);
+                }
+                new_chan.pixels.push_back(pix_val);
+            }
+
+            if (!mat.scanline_jump) {
+                // go through next scanline and average the pixels
+                if (averaging) {
+                    for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                        auto pix_val = 0;
+                        for (auto m = 0U; m < mat.row.size(); ++m) {
+                            pix_val += mat.row[m] * chan.at(x + m, y + 1);
+                        }
+                        (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                    }
+                }
+                // go through next scanline
+                else
+                    --y;
+            }
+        }
+
+        std::swap(chan, new_chan);
+    }
+
+    // subsample Cb channel
+    {
+        Channel new_chan(Cb.width / hor_res_div, Cb.height / vert_res_div);
+        auto& chan = Cb;
+
+        // subsample Cr channel
+        for (auto y = 0U; y < chan.height; y += 2) {
+            for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                auto pix_val = 0;
+                for (auto m = 0U; m < mat.row.size(); ++m) {
+                    pix_val += mat.row[m] * chan.at(x + m, y);
+                }
+                new_chan.pixels.push_back(pix_val);
+            }
+
+            if (!mat.scanline_jump) {
+                // go through next scanline and average the pixels
+                if (averaging) {
+                    for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                        auto pix_val = 0;
+                        for (auto m = 0U; m < mat.row.size(); ++m) {
+                            pix_val += mat.row[m] * chan.at(x + m, y + 1);
+                        }
+                        (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                    }
+                }
+                // go through next scanline
+                else
+                    --y;
+            }
+        }
+
+        std::swap(chan, new_chan);
+    }
+}
+
+//
+// PPM loading
+//
 struct PPMFileBuffer
 {
     std::string& file;
