@@ -32,7 +32,7 @@ public:
         const uint8_t bit_index;
 
     public:
-        operator bool()
+        operator bool() const
         {
             return (bits[block_index] & ((BlockType) 1 << bit_index)) != 0;
         }

@@ -82,3 +82,5 @@ size_t Bitstream::size() const
 {
     return bits.size();
 }
+
+typedef std::initializer_list<bool> Bits;
