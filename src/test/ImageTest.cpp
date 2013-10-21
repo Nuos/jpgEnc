@@ -176,3 +176,35 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         BOOST_CHECK_EQUAL(image.G.at(1, 1), 7);
     }
 }
+
+BOOST_AUTO_TEST_CASE(jpeg_segments_test)
+{
+    // playing with byte memory
+    {
+        Bytes<5> bytes{ { 0 } };
+        set(bytes, { 1, 2, 3, 4, 255 });
+
+        BOOST_CHECK_EQUAL(5, sizeof(bytes));
+
+        BOOST_CHECK_EQUAL(bytes[0], 1);
+        BOOST_CHECK_EQUAL(bytes[1], 2);
+        BOOST_CHECK_EQUAL(bytes[2], 3);
+        BOOST_CHECK_EQUAL(bytes[3], 4);
+        BOOST_CHECK_EQUAL(bytes[4], 255);
+
+        Byte copy[] = { 'J', 'F', 'I', 'F', '\0' };
+        memcpy(bytes.data(), copy, 5);
+
+        BOOST_CHECK_EQUAL(bytes[0], 'J');
+        BOOST_CHECK_EQUAL(bytes[1], 'F');
+        BOOST_CHECK_EQUAL(bytes[2], 'I');
+        BOOST_CHECK_EQUAL(bytes[3], 'F');
+        BOOST_CHECK_EQUAL(bytes[4], '\0');
+    }
+
+    // writing jpeg segments
+    {
+        Image img(4, 4, Image::RGB);
+        img.writeJPEG(L"abc.jpeg");
+    }
+}
