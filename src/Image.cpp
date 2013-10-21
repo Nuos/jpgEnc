@@ -214,7 +214,7 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
 }
 
 // simple "Matrix" used by the subsampling method
-struct Mat
+struct Image::Mat
 {
     std::vector<Byte> row;
     bool scanline_jump = false;
@@ -229,6 +229,40 @@ struct Mat
 
     uint rowsize() const { return static_cast<uint>(row.size()); }
 };
+
+void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mat& mat, bool averaging, SubsamplingMode mode)
+{
+    Channel new_chan(chan.width / hor_res_div, chan.height / vert_res_div);
+
+    // subsample Cr channel
+    for (auto y = 0U; y < chan.height; y += 2) {
+        for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
+            auto pix_val = 0;
+            for (auto m = 0U; m < mat.rowsize(); ++m) {
+                pix_val += mat.row[m] * chan.at(x + m, y);
+            }
+            new_chan.pixels.push_back(pix_val);
+        }
+
+        if (!mat.scanline_jump) {
+            // go through next scanline and average the pixels
+            if (averaging) {
+                for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
+                    auto pix_val = 0;
+                    for (auto m = 0U; m < mat.rowsize(); ++m) {
+                        pix_val += mat.row[m] * chan.at(x + m, y + 1);
+                    }
+                    (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                }
+            }
+            // go through next scanline
+            else
+                --y;
+        }
+    }
+
+    std::swap(chan, new_chan);
+}
 
 void Image::applySubsampling(SubsamplingMode mode)
 {
@@ -305,74 +339,10 @@ void Image::applySubsampling(SubsamplingMode mode)
     }
 
     // subsampling Cr channel
-    {
-        Channel new_chan(Cr.width / hor_res_div, Cr.height / vert_res_div);
-        auto& chan = Cr;
-
-        // subsample Cr channel
-        for (auto y = 0U; y < chan.height; y += 2) {
-            for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
-                auto pix_val = 0;
-                for (auto m = 0U; m < mat.rowsize(); ++m) {
-                    pix_val += mat.row[m] * chan.at(x + m, y);
-                }
-                new_chan.pixels.push_back(pix_val);
-            }
-
-            if (!mat.scanline_jump) {
-                // go through next scanline and average the pixels
-                if (averaging) {
-                    for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
-                        auto pix_val = 0;
-                        for (auto m = 0U; m < mat.rowsize(); ++m) {
-                            pix_val += mat.row[m] * chan.at(x + m, y + 1);
-                        }
-                        (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
-                    }
-                }
-                // go through next scanline
-                else
-                    --y;
-            }
-        }
-
-        std::swap(chan, new_chan);
-    }
+    subsample(Cr, hor_res_div, vert_res_div, mat, averaging, mode);
 
     // subsample Cb channel
-    {
-        Channel new_chan(Cb.width / hor_res_div, Cb.height / vert_res_div);
-        auto& chan = Cb;
-
-        // subsample Cr channel
-        for (auto y = 0U; y < chan.height; y += 2) {
-            for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
-                auto pix_val = 0;
-                for (auto m = 0U; m < mat.rowsize(); ++m) {
-                    pix_val += mat.row[m] * chan.at(x + m, y);
-                }
-                new_chan.pixels.push_back(pix_val);
-            }
-
-            if (!mat.scanline_jump) {
-                // go through next scanline and average the pixels
-                if (averaging) {
-                    for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
-                        auto pix_val = 0;
-                        for (auto m = 0U; m < mat.rowsize(); ++m) {
-                            pix_val += mat.row[m] * chan.at(x + m, y + 1);
-                        }
-                        (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
-                    }
-                }
-                // go through next scanline
-                else
-                    --y;
-            }
-        }
-
-        std::swap(chan, new_chan);
-    }
+    subsample(Cb, hor_res_div, vert_res_div, mat, averaging, mode);
 }
 
 //

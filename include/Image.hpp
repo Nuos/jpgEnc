@@ -87,6 +87,11 @@ public:
     // JPEG SEGMENTS
     void writeJPEG(std::wstring file);
 
+    // HELPER
+private:
+    struct Mat;
+    void subsample(Channel&, int, int, Mat&, bool, SubsamplingMode);
+
     // ACCESSORS
 public:
     uint width, height;
