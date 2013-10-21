@@ -83,4 +83,20 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
         BOOST_CHECK_EQUAL(in[12], false);
         BOOST_CHECK_EQUAL(in.size(), real_writes);
     }
+
+    // fill
+    Bitstream8 bs{ 1, 0, 0, 1 };
+    bs.fill();
+    BOOST_CHECK_EQUAL(bs[0], true);
+    BOOST_CHECK_EQUAL(bs[1], false);
+    BOOST_CHECK_EQUAL(bs[2], false);
+    BOOST_CHECK_EQUAL(bs[3], true);
+    BOOST_CHECK_EQUAL(bs[4], true);
+    BOOST_CHECK_EQUAL(bs[5], true);
+    BOOST_CHECK_EQUAL(bs[6], true);
+    BOOST_CHECK_EQUAL(bs[7], true);
+
+    bs << Bits{ 0, 1 };
+    BOOST_CHECK_EQUAL(bs[8], false);
+    BOOST_CHECK_EQUAL(bs[9], true);
 }

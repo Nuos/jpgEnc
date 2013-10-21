@@ -84,6 +84,7 @@ public:
 
     // others
     size_t size() const;
+    void fill(); // fill remaining bits in the last block with 1s
 };
 
 //
@@ -173,6 +174,14 @@ size_t Bitstream_Generic<BlockType>::size() const
 }
 
 template<typename BlockType>
+void Bitstream_Generic<BlockType>::fill()
+{
+    // set all remaining bits in the last block to 1
+    while (bit_idx <= block_size)
+        *this << true;
+}
+
+template<typename BlockType>
 typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::operator[](unsigned int pos) {
     auto block_idx = static_cast<unsigned int>(pos / block_size);
     auto bit_idx = static_cast<uint8_t>(block_size - (pos - block_idx * block_size) - 1);
@@ -180,7 +189,7 @@ typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::ope
     return BitView(bits, block_idx, bit_idx);
 }
 
-// Convenience definitions (new template 'using' format)
+// Convenience definitions (new type alias format)
 using Bitstream8 = Bitstream_Generic<uint8_t>;
 using Bitstream16 = Bitstream_Generic<uint16_t>;
 using Bitstream32 = Bitstream_Generic<uint32_t>;
