@@ -35,17 +35,17 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     BOOST_CHECK(image.G.at(1, 1) == 15);
     BOOST_CHECK(image.B.at(1, 1) == 7);
 
-    auto YCbCr_image = image.convertToColorSpace(ColorSpace::YCbCr);
+    auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
     BOOST_CHECK(YCbCr_image.Y.at(3, 0) == 6);
     BOOST_CHECK(YCbCr_image.Cb.at(3, 0) == 132);
     BOOST_CHECK(YCbCr_image.Cr.at(3, 0) == 134);
 
-    YCbCr_image = image.convertToColorSpace(ColorSpace::YCbCr);
+    YCbCr_image = image.convertToColorSpace(Image::YCbCr);
     BOOST_CHECK(YCbCr_image.Y.at(3, 0) == 6);
     BOOST_CHECK(YCbCr_image.Cb.at(3, 0) == 132);
     BOOST_CHECK(YCbCr_image.Cr.at(3, 0) == 134);
 
-    auto rgb_image = image.convertToColorSpace(ColorSpace::RGB);
+    auto rgb_image = image.convertToColorSpace(Image::RGB);
     BOOST_CHECK(rgb_image.R.at(3, 0) == 15);
     BOOST_CHECK(rgb_image.G.at(3, 0) == 0);
     BOOST_CHECK(rgb_image.B.at(3, 0) == 15);

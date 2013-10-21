@@ -180,11 +180,11 @@ typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::ope
     return BitView(bits, block_idx, bit_idx);
 }
 
-// Convenience typedefs
-typedef Bitstream_Generic<uint8_t> Bitstream8;
-typedef Bitstream_Generic<uint16_t> Bitstream16;
-typedef Bitstream_Generic<uint32_t> Bitstream32;
-typedef Bitstream_Generic<uint64_t> Bitstream64;
-typedef Bitstream64 Bitstream;
+// Convenience definitions (new template 'using' format)
+using Bitstream8 = Bitstream_Generic<uint8_t>;
+using Bitstream16 = Bitstream_Generic<uint16_t>;
+using Bitstream32 = Bitstream_Generic<uint32_t>;
+using Bitstream64 = Bitstream_Generic<uint64_t>;
+using Bitstream = Bitstream64;
 
 typedef std::initializer_list<bool> Bits;

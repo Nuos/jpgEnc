@@ -1,6 +1,150 @@
 #include "Image.hpp"
 
 
+static const auto debug = false;
+
+//
+// CHANNEL
+//
+// ctor
+Image::Channel::Channel(uint w, uint h)
+: width{ w },
+height{ h }
+{
+    pixels.reserve(width*height);
+    if (debug) std::cout << "Channel::Channel()" << std::endl;
+}
+
+// copy ctor
+Image::Channel::Channel(const Channel& other)
+: pixels(other.pixels),
+width(other.width), height(other.height)
+{
+    if (debug) std::cout << "Channel::Channel(Channel&)" << std::endl;
+}
+
+// move ctor
+Image::Channel::Channel(Channel&& other)
+: pixels(std::move(other.pixels)),
+width(other.width), height(other.height)
+{
+    if (debug) std::cout << "Channel::Channel(Channel&&)" << std::endl;
+}
+
+// ASSIGNMENT
+// copy assignment
+Image::Channel& Image::Channel::operator=(const Channel &other)
+{
+    if (this != &other) {
+        pixels = other.pixels;
+        width = other.width;
+        height = other.height;
+        if (debug) std::cout << "Channel::operator=(Channel&)" << std::endl;
+    }
+    return *this;
+}
+
+// move assignment
+Image::Channel& Image::Channel::operator=(Channel &&other)
+{
+    if (this != &other) {
+        pixels = std::move(other.pixels);
+        width = other.width;
+        height = other.height;
+        if (debug) std::cout << "Channel::operator=(Channel&)" << std::endl;
+    }
+    return *this;
+}
+
+// INDEXING
+// for one-dimensional indexing
+Byte& Image::Channel::at(uint x)
+{
+    return pixels[x];
+}
+
+// for two-dimensional indexing
+// stops at pixel border, so no out-of-bounds indexing possible
+// practically duplicates pixel at the border 
+Byte& Image::Channel::at(uint x, uint y)
+{
+    x = std::min(x, width - 1);
+    y = std::min(y, height - 1);
+
+    return pixels[y * width + x];
+}
+
+//
+// CONSTRUCTORS
+//
+// ctor
+Image::Image(uint w, uint h, ColorSpace color)
+    : color_space_type(color),
+    width(w), height(h),
+    one(w, h), two(w, h), three(w, h),
+    Y(one), Cb(two), Cr(three),
+    R(one), G(two), B(three)
+{
+    if (debug) std::cout << "Image::Image()\n" << std::endl;
+}
+
+// copy ctor
+Image::Image(const Image& other)
+    : color_space_type(other.color_space_type),
+    width(other.width), height(other.height),
+    one(other.one), two(other.two), three(other.three),
+    Y(one), Cb(two), Cr(three),
+    R(one), G(two), B(three)
+{
+    if (debug) std::cout << "Image::Image(Image&)\n" << std::endl;
+}
+
+// move ctor
+Image::Image(Image&& other)
+    : color_space_type(other.color_space_type),
+    width(other.width), height(other.height),
+    one(std::move(other.one)), two(std::move(other.two)), three(std::move(other.three)),
+    Y(one), Cb(two), Cr(three),
+    R(one), G(two), B(three)
+{
+    if (debug) std::cout << "Image::Image(Image&&)\n" << std::endl;
+}
+
+// dtor
+Image::~Image()
+{}
+
+//
+// ASSIGNMENTS
+//
+// copy assignment
+Image& Image::operator = (const Image &other) {
+    if (this != &other) {
+        one = other.one;
+        two = other.two;
+        three = other.three;
+        width = other.width;
+        height = other.height;
+        color_space_type = other.color_space_type;
+        if (debug) std::cout << "Image::operator=(Image&)\n" << std::endl;
+    }
+    return *this;
+}
+
+// move assignment
+Image& Image::operator=(Image &&other) {
+    if (this != &other) {
+        one = std::move(other.one);
+        two = std::move(other.two);
+        three = std::move(other.three);
+        width = other.width;
+        height = other.height;
+        color_space_type = other.color_space_type;
+        if (debug) std::cout << "Image::operator=(Image&&)\n" << std::endl;
+    }
+    return *this;
+}
+
 Image Image::convertToColorSpace(ColorSpace target_color_space) const {
     // no converting if already in target color space
     if (color_space_type == target_color_space)
@@ -66,6 +210,7 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
     return converted;
 }
 
+// simple "Matrix" used by the subsampling method
 struct Mat
 {
     std::vector<Byte> row;
@@ -348,7 +493,7 @@ Image loadPPM(std::string path) {
 
     assert((max_color < 256) && "Only 1 byte colors supported for now!");
 
-    Image img(width, height, ColorSpace::RGB);
+    Image img(width, height, Image::RGB);
 
     if (magic == "P3")
         loadP3PPM(ppm, img);
