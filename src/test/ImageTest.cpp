@@ -2,6 +2,7 @@
 
 #include "Image.hpp"
 #include "BitstreamGeneric.hpp"
+#include "JpegSegments.hpp"
 
 int add(int i, int j) { return i+j; }
 
@@ -181,8 +182,8 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 {
     // playing with byte memory
     {
-        Bytes<5> bytes{ { 0 } };
-        set(bytes, { 1, 2, 3, 4, 255 });
+        Segment::Bytes<5> bytes{ { 0 } };
+        Segment::set(bytes, { 1, 2, 3, 4, 255 });
 
         BOOST_CHECK_EQUAL(5, sizeof(bytes));
 
@@ -206,5 +207,54 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
     {
         Image img(4, 4, Image::RGB);
         img.writeJPEG(L"abc.jpeg");
+    }
+
+    {
+        using namespace Segment;
+
+        // APP0 Seg
+        BOOST_CHECK_EQUAL(18, sizeof(APP0));
+
+        APP0.setLen(256);
+        APP0.setXdensity(1);
+        APP0.setYdensity(1);
+
+        BOOST_CHECK_EQUAL(APP0.len[0], 1);
+        BOOST_CHECK_EQUAL(APP0.len[1], 0);
+
+        BOOST_CHECK_EQUAL(APP0.x_density[0], 0);
+        BOOST_CHECK_EQUAL(APP0.x_density[1], 1);
+
+        BOOST_CHECK_EQUAL(APP0.y_density[0], 0);
+        BOOST_CHECK_EQUAL(APP0.y_density[1], 1);
+
+
+        // SOF0 seg (3 component version)
+        BOOST_CHECK_EQUAL(13, sizeof(Segment::SOF0_1c));
+        BOOST_CHECK_EQUAL(19, sizeof(Segment::SOF0_3c));
+
+        SOF0_3c.setImageSizeX(256);
+        SOF0_3c.setImageSizeY(256);
+        SOF0_3c.setCompSetup(
+        { CompSetup::Y, CompSetup::NoSubSampling, 0,
+          CompSetup::Cb, CompSetup::Half, 1,
+          CompSetup::Cr, CompSetup::Half, 2, }
+        );
+
+        BOOST_CHECK_EQUAL(SOF0_3c.image_size_x[0], 1);
+        BOOST_CHECK_EQUAL(SOF0_3c.image_size_x[1], 0);
+
+        BOOST_CHECK_EQUAL(SOF0_3c.image_size_y[0], 1);
+        BOOST_CHECK_EQUAL(SOF0_3c.image_size_y[1], 0);
+
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[0], CompSetup::Y);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[1], CompSetup::NoSubSampling);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[2], 0);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[3], CompSetup::Cb);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[4], CompSetup::Half);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[5], 1);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[6], CompSetup::Cr);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[7], CompSetup::Half);
+        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[8], 2);
     }
 }

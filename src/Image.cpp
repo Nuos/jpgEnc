@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include "JpegSegments.hpp"
+
 static const auto debug = false;
 
 //
@@ -224,6 +226,8 @@ struct Mat
     {
         scanline_jump = _scanline_jump;
     }
+
+    uint rowsize() const { return static_cast<uint>(row.size()); }
 };
 
 void Image::applySubsampling(SubsamplingMode mode)
@@ -307,9 +311,9 @@ void Image::applySubsampling(SubsamplingMode mode)
 
         // subsample Cr channel
         for (auto y = 0U; y < chan.height; y += 2) {
-            for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+            for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
                 auto pix_val = 0;
-                for (auto m = 0U; m < mat.row.size(); ++m) {
+                for (auto m = 0U; m < mat.rowsize(); ++m) {
                     pix_val += mat.row[m] * chan.at(x + m, y);
                 }
                 new_chan.pixels.push_back(pix_val);
@@ -318,9 +322,9 @@ void Image::applySubsampling(SubsamplingMode mode)
             if (!mat.scanline_jump) {
                 // go through next scanline and average the pixels
                 if (averaging) {
-                    for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                    for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
                         auto pix_val = 0;
-                        for (auto m = 0U; m < mat.row.size(); ++m) {
+                        for (auto m = 0U; m < mat.rowsize(); ++m) {
                             pix_val += mat.row[m] * chan.at(x + m, y + 1);
                         }
                         (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
@@ -342,9 +346,9 @@ void Image::applySubsampling(SubsamplingMode mode)
 
         // subsample Cr channel
         for (auto y = 0U; y < chan.height; y += 2) {
-            for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+            for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
                 auto pix_val = 0;
-                for (auto m = 0U; m < mat.row.size(); ++m) {
+                for (auto m = 0U; m < mat.rowsize(); ++m) {
                     pix_val += mat.row[m] * chan.at(x + m, y);
                 }
                 new_chan.pixels.push_back(pix_val);
@@ -353,9 +357,9 @@ void Image::applySubsampling(SubsamplingMode mode)
             if (!mat.scanline_jump) {
                 // go through next scanline and average the pixels
                 if (averaging) {
-                    for (auto x = 0U; x < chan.width; x += mat.row.size()) {
+                    for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
                         auto pix_val = 0;
-                        for (auto m = 0U; m < mat.row.size(); ++m) {
+                        for (auto m = 0U; m < mat.rowsize(); ++m) {
                             pix_val += mat.row[m] * chan.at(x + m, y + 1);
                         }
                         (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
@@ -505,93 +509,32 @@ Image loadPPM(std::string path) {
     return img;
 }
 
-//
-// JPEG stuff
-//
-namespace Segment
-{
-    //static const Byte  mSOI[2] = { 0xff, 0xd8 };
-    //static const Byte  mEOI[2] = { 0xff, 0xd9 };
-    //static const Byte  mDHT[2] = { 0xff, 0xc4 };
-
-    struct sAPP0
-    {
-        const Bytes<2> marker;
-        Bytes<2> len;                   // TODO: fill that! HI/LO | Constraint: >= 16
-        const Bytes<5> type;
-        const Bytes<2> rev;
-        const Bytes<1> pixelsize;
-        Bytes<2> x_density;                      // TODO: fill that!
-        Bytes<2> y_density;                      // TODO: fill that!
-        const Bytes<2> thumbnail_size;
-
-        // const defaults
-        sAPP0()
-            : marker{ { 0xff, 0xe0 } },
-            len{ { 0, 0 } },
-            type{ { 'J', 'F', 'I', 'F', '\0' } },
-            rev{ { 1, 1 } },
-            pixelsize{ { 0 } },
-            x_density{ { 0, 0 } },
-            y_density{ { 0, 0 } },
-            thumbnail_size{ { 0, 0} }
-        {}
-    } APP0; // prefilled APP0 segment
-
-    template<uint num_components>
-    struct sSOF0
-    {
-        const Bytes<2> marker;
-        const Bytes<2> len;   // HI/LO
-                                    // Constraint: 8 + num components * 3
-                                    // 1 component (Y) or 3 components (YCbCr)
-        const Bytes<1> precision;
-        Bytes<2> image_size_x;       // TODO: fill that! HI/LO  >0!
-        Bytes<2> image_size_y;       // TODO: fill that! HI/LO  >0!
-        const Bytes<1> component_count;
-        Bytes<num_components * 3> component_setup; // TODO: fill that!
-
-        // const defaults
-        sSOF0()
-            : marker{ { 0xff, 0xc0 } },
-            len{ { 0, 8 + num_components * 3 } },
-            precision{ { 8 } },
-            image_size_x{ { 0, 0} },
-            image_size_y{ { 0, 0} },
-            component_count{ { num_components } },
-            component_setup{ { 0 } }
-        {}
-    };
-    sSOF0<1> SOF0_1c;
-    sSOF0<3> SOF0_3c;
-}
-
 void Image::writeJPEG(std::wstring file)
 {
     std::ofstream jpeg(file);
 
     {
-        assert(18 == sizeof(Segment::APP0));
-
         // write APP0
-        set(Segment::APP0.len, { 1, 0x00 });
-        set(Segment::APP0.x_density, { 0, 1 });
-        set(Segment::APP0.y_density, { 0, 1 });
+        using Segment::APP0;
+
+        APP0.setLen(256);
+        APP0.setXdensity(1);
+        APP0.setYdensity(1);
 
         jpeg.write((const char*)&Segment::APP0, sizeof(Segment::APP0));
     }
 
     {
-        assert(13 == sizeof(Segment::SOF0_1c));
-        assert(19 == sizeof(Segment::SOF0_3c));
-
         // write SOF0
-        set(Segment::SOF0_3c.image_size_x, { 1, 0x00 });
-        set(Segment::SOF0_3c.image_size_y, { 1, 0x00 });
-        set(Segment::SOF0_3c.component_setup,
-            { 1, 0x22, 0,
-              2, 0x11, 1,
-              3, 0x11, 2, });
+        using namespace Segment;
+
+        SOF0_3c.setImageSizeX(256);
+        SOF0_3c.setImageSizeY(256);
+        SOF0_3c.setCompSetup(
+        { CompSetup::Y,  CompSetup::NoSubSampling, 0,
+          CompSetup::Cb, CompSetup::Half,          1,
+          CompSetup::Cr, CompSetup::Half,          2, }
+        );
 
         jpeg.write((const char*)&Segment::SOF0_3c, sizeof(Segment::SOF0_3c));
     }

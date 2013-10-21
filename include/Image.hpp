@@ -14,22 +14,11 @@
 typedef unsigned int uint;
 typedef uint8_t Byte;
 
-template <int T>
-using Bytes = std::array<Byte, T>;
-
 class Image;
 
 // load a ppm file (P3 or P6 version)
 Image loadPPM(std::string path);
 
-template <int sz>
-void set(Bytes<sz>& arr, std::initializer_list<Byte> list)
-{
-    assert((list.size() <= sz) && "Trying to do a buffer overrun, eh?");
-    auto ptr = arr.begin();
-    for (const auto& b : list)
-        *ptr++ = b;
-}
 
 // image class handling three channels (RGB, YUV, whatever) with one byte pixels
 class Image
