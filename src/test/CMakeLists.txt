@@ -2,7 +2,6 @@
 set(SOURCE_FILES_UNIT_TEST
     common.cpp
     ImageTest.cpp
-    BitstreamTest.cpp
     BitstreamGenericTest.cpp
     )
     
