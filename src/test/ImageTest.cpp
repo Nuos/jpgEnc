@@ -59,15 +59,15 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S444);
-        BOOST_CHECK_EQUAL(image.B.width, 4);
-        BOOST_CHECK_EQUAL(image.B.height, 4);
+        BOOST_CHECK_EQUAL(image.B.w, 4);
+        BOOST_CHECK_EQUAL(image.B.h, 4);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S422);
-        BOOST_CHECK_EQUAL(image.B.width, 2);
-        BOOST_CHECK_EQUAL(image.B.height, 4);
+        BOOST_CHECK_EQUAL(image.B.w, 2);
+        BOOST_CHECK_EQUAL(image.B.h, 4);
 
         // B channel:
         // 0 0 
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S411);
-        BOOST_CHECK_EQUAL(image.B.width, 1);
-        BOOST_CHECK_EQUAL(image.B.height, 4);
+        BOOST_CHECK_EQUAL(image.B.w, 1);
+        BOOST_CHECK_EQUAL(image.B.h, 4);
 
         // B channel:
         // 0
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420);
-        BOOST_CHECK_EQUAL(image.B.width, 2);
-        BOOST_CHECK_EQUAL(image.B.height, 2);
+        BOOST_CHECK_EQUAL(image.B.w, 2);
+        BOOST_CHECK_EQUAL(image.B.h, 2);
         
         // B channel:
         // 0 0
@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_m);
-        BOOST_CHECK_EQUAL(image.B.width, 2);
-        BOOST_CHECK_EQUAL(image.B.height, 2);
+        BOOST_CHECK_EQUAL(image.B.w, 2);
+        BOOST_CHECK_EQUAL(image.B.h, 2);
         
         // B channel:
         // 1 3
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_lm);
-        BOOST_CHECK_EQUAL(image.B.width, 2);
-        BOOST_CHECK_EQUAL(image.B.height, 2);
+        BOOST_CHECK_EQUAL(image.B.w, 2);
+        BOOST_CHECK_EQUAL(image.B.h, 2);
         
         // B channel:
         // 0 0

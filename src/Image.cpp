@@ -12,16 +12,20 @@ static const auto debug = false;
 // ctor
 Image::Channel::Channel(uint w, uint h)
 : width{ w },
-height{ h }
+height{ h },
+w{ width },
+h{ height }
 {
-    pixels.reserve(width*height);
+    pixels.resize(width*height);
     if (debug) std::cout << "Channel::Channel()" << std::endl;
 }
 
 // copy ctor
 Image::Channel::Channel(const Channel& other)
 : pixels(other.pixels),
-width(other.width), height(other.height)
+width(other.width), height(other.height),
+w{ width },
+h{ height }
 {
     if (debug) std::cout << "Channel::Channel(Channel&)" << std::endl;
 }
@@ -29,7 +33,9 @@ width(other.width), height(other.height)
 // move ctor
 Image::Channel::Channel(Channel&& other)
 : pixels(std::move(other.pixels)),
-width(other.width), height(other.height)
+width(other.width), height(other.height),
+w{ width },
+h{ height }
 {
     if (debug) std::cout << "Channel::Channel(Channel&&)" << std::endl;
 }
@@ -75,6 +81,13 @@ Byte& Image::Channel::operator()(uint x, uint y)
     y = std::min(y, height - 1);
 
     return pixels[y * width + x];
+}
+
+void Image::Channel::resize(uint _width, uint _height)
+{
+    width = _width;
+    height = _height;
+    pixels.resize(width*height);
 }
 
 //
@@ -232,22 +245,23 @@ struct Image::Mask
 
 void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mask& mat, bool averaging, SubsamplingMode mode)
 {
-    Channel new_chan(chan.width / hor_res_div, chan.height / vert_res_div);
+    Channel new_chan(chan.w / hor_res_div, chan.h / vert_res_div);
 
     // subsample Cr channel
-    for (auto y = 0U; y < chan.height; y += 2) {
-        for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
+    auto pixidx = 0U;
+    for (auto y = 0U; y < chan.h; y += 2) {
+        for (auto x = 0U; x < chan.w; x += mat.rowsize()) {
             auto pix_val = 0;
             for (auto m = 0U; m < mat.rowsize(); ++m) {
                 pix_val += mat.row[m] * chan(x + m, y);
             }
-            new_chan.pixels.push_back(pix_val);
+            new_chan(pixidx++) = pix_val;
         }
 
         if (!mat.scanline_jump) {
             // go through next scanline and average the pixels
             if (averaging) {
-                for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
+                for (auto x = 0U; x < chan.w; x += mat.rowsize()) {
                     auto pix_val = 0;
                     for (auto m = 0U; m < mat.rowsize(); ++m) {
                         pix_val += mat.row[m] * chan(x + m, y + 1);
@@ -414,13 +428,13 @@ void loadP3PPM(PPMFileBuffer& file, Image& img) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
         file.read_word(buf);
-        img.R.pixels.push_back(std::stoi(buf));
+        img.R(x) = std::stoi(buf);
 
         file.read_word(buf);
-        img.G.pixels.push_back(std::stoi(buf));
+        img.G(x) = std::stoi(buf);
 
         file.read_word(buf);
-        img.B.pixels.push_back(std::stoi(buf));
+        img.B(x) = std::stoi(buf);
     }
 }
 
@@ -428,9 +442,9 @@ void loadP3PPM(PPMFileBuffer& file, Image& img) {
 void loadP6PPM(PPMFileBuffer& ppm, Image& img) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
-        img.R.pixels.push_back(ppm.read_byte());
-        img.G.pixels.push_back(ppm.read_byte());
-        img.B.pixels.push_back(ppm.read_byte());
+        img.R(x) = ppm.read_byte();
+        img.G(x) = ppm.read_byte();
+        img.B(x) = ppm.read_byte();
     }
 }
 

@@ -27,9 +27,6 @@ class Image
 private:
     struct Channel
     {
-        uint width, height;
-        std::vector<Byte> pixels;
-
         Channel(uint w, uint h); // ctor
         Channel(const Channel& other); // copy ctor
         Channel(Channel&& other); // move ctor
@@ -44,6 +41,14 @@ private:
         // stops at pixel border, so no out-of-bounds indexing possible
         // practically duplicates pixel at the border 
         Byte& operator()(uint x, uint y);
+
+        void resize(uint width, uint height);
+
+        const uint &w, &h;
+
+    private:
+        uint width, height;
+        std::vector<Byte> pixels;
     };
 
     // NESTED ENUMS
