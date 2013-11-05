@@ -44,6 +44,28 @@ namespace Segment
     //static const Byte  mEOI[2] = { 0xff, 0xd9 };
     //static const Byte  mDHT[2] = { 0xff, 0xc4 };
 
+    struct sSOI
+    {
+        const Bytes<2> marker;
+
+        // defaults
+        sSOI()
+            : marker{ { 0xff, 0xd8 } }
+        {}
+    };
+    static sSOI SOI; // prefilled/predefined APP0 segment
+
+    struct sEOI
+    {
+        const Bytes<2> marker;
+
+        // defaults
+        sEOI()
+            : marker{ { 0xff, 0xd9 } }
+        {}
+    };
+    static sEOI EOI; // prefilled/predefined APP0 segment
+
     struct sAPP0
     {
         const Bytes<2> marker;
