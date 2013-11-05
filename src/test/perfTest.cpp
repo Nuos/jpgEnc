@@ -16,7 +16,8 @@ const auto writes = 1e5;
 const auto writes = 1e8;
 #endif
 
-#define PRINT_TEST_NAME(TYPE) std::cout << "\n>>> " << __FUNCTION__ << ": " << typeid(TYPE).name() << "\n"
+#define PRINT_TEST_NAME std::cout << "\n>>> " << __FUNCTION__ << ":\n"
+#define PRINT_TEST_NAME_TYPE(TYPE) std::cout << "\n>>> " << __FUNCTION__ << ": " << typeid(TYPE).name() << "\n"
 
 #define TIME(description, function) timeFn(#description, [&]() { #function });
 
@@ -28,10 +29,13 @@ void timeFn(std::string desc, std::function<void()> fn)
     std::cout << desc << " took " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 }
 
+void timeFn(std::function<void()> fn) { timeFn("", fn); }
+
+
 template <typename TestType>
 void test_bitstream()
 {
-    PRINT_TEST_NAME(TestType);
+    PRINT_TEST_NAME_TYPE(TestType);
 
     TestType bitset;
 
@@ -76,9 +80,10 @@ void test_bitstream()
 
 void test_jpeg_segment_writing()
 {
+    PRINT_TEST_NAME;
     auto image = loadPPM("res/tester_p3.ppm");
-    image.writeJPEG(L"tester_p3.jpg");
-    //timeFn("Writing JPEG Segments", [&]() { image.writeJPEG(L"tester_p3.jpg"); });
+    //image.writeJPEG(L"tester_p3.jpg");
+    timeFn([&]() { image.writeJPEG(L"tester_p3.jpg"); });
 }
 
 int main()
@@ -89,8 +94,8 @@ int main()
     test_bitstream<Bitstream64>();
     test_bitstream<Bitstream8>();
 
-    timeFn("\nWriting JPEG Segments", &test_jpeg_segment_writing);
-    //test_jpeg_segment_writing();
+    //timeFn("\nWriting JPEG Segments", &test_jpeg_segment_writing);
+    test_jpeg_segment_writing();
 
     return 0;
 }
