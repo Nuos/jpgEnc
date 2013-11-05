@@ -38,12 +38,12 @@ private:
         Channel& operator=(Channel &&other); // move assignment
 
         // for one-dimensional indexing
-        Byte& at(uint x);
+        Byte& operator()(uint x);
 
         // for two-dimensional indexing
         // stops at pixel border, so no out-of-bounds indexing possible
         // practically duplicates pixel at the border 
-        Byte& at(uint x, uint y);
+        Byte& operator()(uint x, uint y);
     };
 
     // NESTED ENUMS
@@ -89,8 +89,8 @@ public:
 
     // HELPER
 private:
-    struct Mat;
-    void subsample(Channel&, int, int, Mat&, bool, SubsamplingMode);
+    struct Mask;
+    void subsample(Channel&, int, int, Mask&, bool, SubsamplingMode);
 
     // ACCESSORS
 public:

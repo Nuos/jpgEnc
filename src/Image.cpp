@@ -61,7 +61,7 @@ Image::Channel& Image::Channel::operator=(Channel &&other)
 
 // INDEXING
 // for one-dimensional indexing
-Byte& Image::Channel::at(uint x)
+Byte& Image::Channel::operator()(uint x)
 {
     return pixels[x];
 }
@@ -69,7 +69,7 @@ Byte& Image::Channel::at(uint x)
 // for two-dimensional indexing
 // stops at pixel border, so no out-of-bounds indexing possible
 // practically duplicates pixel at the border 
-Byte& Image::Channel::at(uint x, uint y)
+Byte& Image::Channel::operator()(uint x, uint y)
 {
     x = std::min(x, width - 1);
     y = std::min(y, height - 1);
@@ -173,13 +173,13 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                 static const float Cr[] {  .5f,    -.4186f, -.0813f };
 
                 for (uint x = 0; x < num_pixel; ++x) {
-                    auto& r = R.at(x);
-                    auto& g = G.at(x);
-                    auto& b = B.at(x);
+                    auto& r = R(x);
+                    auto& g = G(x);
+                    auto& b = B(x);
 
-                    converted.Y.at(x)  = static_cast<Byte>(Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b));
-                    converted.Cb.at(x) = static_cast<Byte>(Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
-                    converted.Cr.at(x) = static_cast<Byte>(Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
+                    converted. Y(x)  = static_cast<Byte>(Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b));
+                    converted.Cb(x) = static_cast<Byte>(Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
+                    converted.Cr(x) = static_cast<Byte>(Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
                 }
             }
             break;
@@ -199,13 +199,13 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                 static const float b[] {  1.f, 1.772f,   .0f };
 
                 for (uint x = 0; x < num_pixel; ++x) {
-                    auto y  =  Y.at(x) - Flat[0];
-                    auto cb = Cb.at(x) - Flat[1];
-                    auto cr = Cr.at(x) - Flat[2];
+                    auto y  =  Y(x) - Flat[0];
+                    auto cb = Cb(x) - Flat[1];
+                    auto cr = Cr(x) - Flat[2];
 
-                    converted.Y.at(x)  = static_cast<Byte>(r[0] * y + r[1] * cb + r[2] * cr);
-                    converted.Cb.at(x) = static_cast<Byte>(g[0] * y + g[1] * cb + g[2] * cr);
-                    converted.Cr.at(x) = static_cast<Byte>(b[0] * y + b[1] * cb + b[2] * cr);
+                    converted. Y(x)  = static_cast<Byte>(r[0] * y + r[1] * cb + r[2] * cr);
+                    converted.Cb(x) = static_cast<Byte>(g[0] * y + g[1] * cb + g[2] * cr);
+                    converted.Cr(x) = static_cast<Byte>(b[0] * y + b[1] * cb + b[2] * cr);
                 }
             }
             break;
@@ -214,14 +214,14 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
 }
 
 // simple "Matrix" used by the subsampling method
-struct Image::Mat
+struct Image::Mask
 {
     std::vector<Byte> row;
     bool scanline_jump = false;
 
-    Mat() {}
+    Mask() {}
 
-    Mat(std::vector<Byte>&& r1, bool _scanline_jump)
+    Mask(std::vector<Byte>&& r1, bool _scanline_jump)
         : row(std::move(r1))
     {
         scanline_jump = _scanline_jump;
@@ -230,7 +230,7 @@ struct Image::Mat
     uint rowsize() const { return static_cast<uint>(row.size()); }
 };
 
-void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mat& mat, bool averaging, SubsamplingMode mode)
+void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mask& mat, bool averaging, SubsamplingMode mode)
 {
     Channel new_chan(chan.width / hor_res_div, chan.height / vert_res_div);
 
@@ -239,7 +239,7 @@ void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mat& mat
         for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
             auto pix_val = 0;
             for (auto m = 0U; m < mat.rowsize(); ++m) {
-                pix_val += mat.row[m] * chan.at(x + m, y);
+                pix_val += mat.row[m] * chan(x + m, y);
             }
             new_chan.pixels.push_back(pix_val);
         }
@@ -250,9 +250,9 @@ void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mat& mat
                 for (auto x = 0U; x < chan.width; x += mat.rowsize()) {
                     auto pix_val = 0;
                     for (auto m = 0U; m < mat.rowsize(); ++m) {
-                        pix_val += mat.row[m] * chan.at(x + m, y + 1);
+                        pix_val += mat.row[m] * chan(x + m, y + 1);
                     }
-                    (new_chan.at(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                    (new_chan(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
                 }
             }
             // go through next scanline
@@ -281,7 +281,7 @@ void Image::applySubsampling(SubsamplingMode mode)
     int vert_res_div = 1;
     int hor_res_div = 1;
 
-    Mat mat;
+    Mask mat;
 
     switch (mode) {
         case Image::S444:
@@ -293,7 +293,7 @@ void Image::applySubsampling(SubsamplingMode mode)
         case Image::S422:
             // x- x-
             // x- x-
-            mat = Mat{{1, 0}, false};
+            mat = Mask{ { 1, 0 }, false };
 
             vert_res_div = 1;
             hor_res_div = 2;
@@ -301,7 +301,7 @@ void Image::applySubsampling(SubsamplingMode mode)
         case Image::S411:
             // x- --
             // x- --
-            mat = Mat{{1, 0, 0, 0}, false};
+            mat = Mask{ { 1, 0, 0, 0 }, false };
 
             vert_res_div = 1;
             hor_res_div = 4;
@@ -309,7 +309,7 @@ void Image::applySubsampling(SubsamplingMode mode)
         case Image::S420:
             // x- x-
             // -- --
-            mat = Mat{{1, 0}, true};
+            mat = Mask{ { 1, 0 }, true };
 
             vert_res_div = 2;
             hor_res_div = 2;
@@ -318,7 +318,7 @@ void Image::applySubsampling(SubsamplingMode mode)
             // like S420, but taking the mean in vertical and horizontal direction
             // ++ ++
             // ++ ++
-            mat = Mat{{1, 1}, false};
+            mat = Mask{ { 1, 1 }, false };
 
             vert_res_div = 2;
             hor_res_div = 2;
@@ -328,7 +328,7 @@ void Image::applySubsampling(SubsamplingMode mode)
             // like S420, but taking the mean only in vertical direction
             // +- +-
             // +- +-
-            mat = Mat{{1, 0}, false};
+            mat = Mask{ { 1, 0 }, false };
 
             vert_res_div = 2;
             hor_res_div = 2;

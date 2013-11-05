@@ -28,28 +28,28 @@ BOOST_AUTO_TEST_CASE(test_add) {
 
 BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
-    BOOST_CHECK(image.R.at(100, 0) == 15);
-    BOOST_CHECK(image.G.at(100, 0) == 0);
-    BOOST_CHECK(image.B.at(100, 0) == 15);
+    BOOST_CHECK(image.R(100, 0) == 15);
+    BOOST_CHECK(image.G(100, 0) == 0);
+    BOOST_CHECK(image.B(100, 0) == 15);
 
-    BOOST_CHECK(image.R.at(1, 1) == 0);
-    BOOST_CHECK(image.G.at(1, 1) == 15);
-    BOOST_CHECK(image.B.at(1, 1) == 7);
+    BOOST_CHECK(image.R(1, 1) == 0);
+    BOOST_CHECK(image.G(1, 1) == 15);
+    BOOST_CHECK(image.B(1, 1) == 7);
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y.at(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb.at(3, 0) == 132);
-    BOOST_CHECK(YCbCr_image.Cr.at(3, 0) == 134);
+    BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
+    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 132);
+    BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
 
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y.at(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb.at(3, 0) == 132);
-    BOOST_CHECK(YCbCr_image.Cr.at(3, 0) == 134);
+    BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
+    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 132);
+    BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
-    BOOST_CHECK(rgb_image.R.at(3, 0) == 15);
-    BOOST_CHECK(rgb_image.G.at(3, 0) == 0);
-    BOOST_CHECK(rgb_image.B.at(3, 0) == 15);
+    BOOST_CHECK(rgb_image.R(3, 0) == 15);
+    BOOST_CHECK(rgb_image.G(3, 0) == 0);
+    BOOST_CHECK(rgb_image.B(3, 0) == 15);
 }
 
 BOOST_AUTO_TEST_CASE(image_subsampling_test)
@@ -74,19 +74,19 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0 0
         // 0 7
         // 15 0
-        BOOST_CHECK_EQUAL(image.B.at(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.B.at(1, 2), 7);
-        BOOST_CHECK_EQUAL(image.B.at(0, 3), 15);
-        BOOST_CHECK_EQUAL(image.B.at(1, 3), 0);
+        BOOST_CHECK_EQUAL(image.B(0, 2), 0);
+        BOOST_CHECK_EQUAL(image.B(1, 2), 7);
+        BOOST_CHECK_EQUAL(image.B(0, 3), 15);
+        BOOST_CHECK_EQUAL(image.B(1, 3), 0);
 
         // G channel:
         // 0 0 
         // 0 0
         // 0 15
         // 0 0
-        BOOST_CHECK_EQUAL(image.G.at(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 2), 15);
-        BOOST_CHECK_EQUAL(image.G.at(0, 3), 0);
+        BOOST_CHECK_EQUAL(image.G(0, 2), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 2), 15);
+        BOOST_CHECK_EQUAL(image.G(0, 3), 0);
     }
 
     {
@@ -100,16 +100,16 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0
         // 0
         // 15
-        BOOST_CHECK_EQUAL(image.B.at(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.B.at(0, 3), 15);
+        BOOST_CHECK_EQUAL(image.B(0, 2), 0);
+        BOOST_CHECK_EQUAL(image.B(0, 3), 15);
 
         // G channel:
         // 0
         // 0
         // 0
         // 0
-        BOOST_CHECK_EQUAL(image.G.at(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.G.at(0, 3), 0);
+        BOOST_CHECK_EQUAL(image.G(0, 2), 0);
+        BOOST_CHECK_EQUAL(image.G(0, 3), 0);
     }
 
     {
@@ -121,14 +121,14 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // B channel:
         // 0 0
         // 0 7
-        BOOST_CHECK_EQUAL(image.B.at(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.B.at(1, 1), 7);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 7);
 
         // G channel:
         // 0 0
         // 0 15
-        BOOST_CHECK_EQUAL(image.G.at(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 1), 15);
+        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 15);
     }
 
     {
@@ -140,18 +140,18 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // B channel:
         // 1 3
         // 3 1
-        BOOST_CHECK_EQUAL(image.B.at(0, 0), 1);
-        BOOST_CHECK_EQUAL(image.B.at(0, 1), 3);
-        BOOST_CHECK_EQUAL(image.B.at(1, 0), 3);
-        BOOST_CHECK_EQUAL(image.B.at(1, 1), 1);
+        BOOST_CHECK_EQUAL(image.B(0, 0), 1);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 3);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 3);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 1);
 
         // G channel:
         // 3 0
         // 0 3
-        BOOST_CHECK_EQUAL(image.G.at(0, 0), 3);
-        BOOST_CHECK_EQUAL(image.G.at(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 1), 3);
+        BOOST_CHECK_EQUAL(image.G(0, 0), 3);
+        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 3);
     }
 
     {
@@ -163,18 +163,18 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // B channel:
         // 0 0
         // 7 3
-        BOOST_CHECK_EQUAL(image.B.at(0, 0), 0);
-        BOOST_CHECK_EQUAL(image.B.at(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.B.at(0, 1), 7);
-        BOOST_CHECK_EQUAL(image.B.at(1, 1), 3);
+        BOOST_CHECK_EQUAL(image.B(0, 0), 0);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 0);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 7);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 3);
 
         // G channel:
         // 0 0
         // 0 7
-        BOOST_CHECK_EQUAL(image.G.at(0, 0), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.G.at(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.G.at(1, 1), 7);
+        BOOST_CHECK_EQUAL(image.G(0, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 7);
     }
 }
 
