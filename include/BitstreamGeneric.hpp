@@ -119,7 +119,8 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(bool val)
         auto mask = (BlockType) 1 << bit_idx;
         block |= mask;
     }
-    --bit_idx;
+
+    --bit_idx; // wraps around to 255 if it was 0
     ++sz;
 
     return *this;
@@ -162,6 +163,7 @@ template<typename BlockType>
 std::istream& operator>>(std::istream& in, Bitstream_Generic<BlockType>& bitstream)
 {
     BlockType b = 0;
+    // only reads sizeof(b) bytes, if the istream was not aligned to that, the rest is ignored
     while (in.read((char*) &b, sizeof(b)))
         bitstream << b;
     return in;
@@ -183,6 +185,7 @@ void Bitstream_Generic<BlockType>::fill()
 
 template<typename BlockType>
 typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::operator[](unsigned int pos) {
+    assert(pos < size());
     auto block_idx = static_cast<unsigned int>(pos / block_size);
     auto bit_idx = static_cast<uint8_t>(block_size - (pos - block_idx * block_size) - 1);
 
