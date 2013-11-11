@@ -21,8 +21,8 @@ namespace Segment
     }
 
     // getting the high byte of a int
-    inline Byte getHi(int i) { return (i & 0xFF00) >> 8; }
-    inline Byte getLo(int i) { return (i & 0x00FF); }
+    inline Byte getHi(short i) { return (i & 0xFF00) >> 8; }
+    inline Byte getLo(short i) { return (i & 0x00FF); }
 
     // stuff for the component (Y, Cb or Cr) config
     namespace CompSetup
@@ -103,9 +103,9 @@ namespace Segment
         {}
 
         // setter
-        sAPP0& setLen(int _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
-        sAPP0& setXdensity(int _den) { set(x_density, { getHi(_den), getLo(_den) }); return *this; }
-        sAPP0& setYdensity(int _den) { set(y_density, { getHi(_den), getLo(_den) }); return *this; }
+        sAPP0& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+        sAPP0& setXdensity(short _den) { set(x_density, { getHi(_den), getLo(_den) }); return *this; }
+        sAPP0& setYdensity(short _den) { set(y_density, { getHi(_den), getLo(_den) }); return *this; }
 
         // stream I/O
         friend std::ostream& operator<<(std::ostream& out, const sAPP0& APP0)
@@ -155,8 +155,8 @@ namespace Segment
         }
 
         // setter
-        sSOF0& setImageSizeX(int _sz) { set(image_size_x, { getHi(_sz), getLo(_sz) }); return *this; }
-        sSOF0& setImageSizeY(int _sz) { set(image_size_y, { getHi(_sz), getLo(_sz) }); return *this; }
+        sSOF0& setImageSizeX(short _sz) { set(image_size_x, { getHi(_sz), getLo(_sz) }); return *this; }
+        sSOF0& setImageSizeY(short _sz) { set(image_size_y, { getHi(_sz), getLo(_sz) }); return *this; }
         sSOF0& setCompSetup(std::initializer_list<Byte> comp_setup) { set(component_setup, comp_setup); return *this; }
 
         // stream I/O
