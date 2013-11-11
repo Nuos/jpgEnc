@@ -497,40 +497,17 @@ void Image::writeJPEG(std::wstring file)
 {
     std::ofstream jpeg(file);
 
-    {
-        // write SOI
-        jpeg.write((const char*)&Segment::SOI, sizeof(Segment::SOI));
-    }
+    using namespace Segment;
 
-    {
-        // write APP0
-        using Segment::APP0;
-
-        APP0.setLen(16); // no thumbnail
-        APP0.setXdensity(0x48);
-        APP0.setYdensity(0x48);
-
-        jpeg.write((const char*)&Segment::APP0, sizeof(Segment::APP0));
-    }
-
-    {
-        // write SOF0
-        using namespace Segment;
-
-        SOF0_3c.setImageSizeX(width);
-        SOF0_3c.setImageSizeY(height);
-        SOF0_3c.setCompSetup(
-        { CompSetup::Y,  CompSetup::NoSubSampling, 0,
-          CompSetup::Cb, CompSetup::Half,          1,
-          CompSetup::Cr, CompSetup::Half,          2, }
-        );
-
-        jpeg.write((const char*)&Segment::SOF0_3c, sizeof(Segment::SOF0_3c));
-    }
-
-    {
-        // write EOI
-        jpeg.write((const char*)&Segment::EOI, sizeof(Segment::EOI));
-    }
+    jpeg << SOI
+        << APP0
+        << SOF0_3c
+            .setImageSizeX(width)
+            .setImageSizeY(height)
+            .setCompSetup({ CompSetup::Y, CompSetup::NoSubSampling, 0,
+                            CompSetup::Cb, CompSetup::Half, 1,
+                            CompSetup::Cr, CompSetup::Half, 2, })
+        << EOI
+        ;
 }
 
