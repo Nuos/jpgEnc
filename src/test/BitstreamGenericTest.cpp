@@ -99,4 +99,9 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     bs << Bits{ 0, 1 };
     BOOST_CHECK_EQUAL(bs[8], false);
     BOOST_CHECK_EQUAL(bs[9], true);
+
+    // do nothing if the last block is already full
+    Bitstream8 bs2{ 0, 0, 0, 0, 0, 0, 0, 0 };
+    bs2.fill();
+    BOOST_CHECK_EQUAL(bs2.size(), 8);
 }
