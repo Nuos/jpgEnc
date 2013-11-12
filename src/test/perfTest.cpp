@@ -31,7 +31,6 @@ void timeFn(std::string desc, std::function<void()> fn)
 
 void timeFn(std::function<void()> fn) { timeFn("", fn); }
 
-
 template <typename TestType>
 void test_bitstream()
 {
@@ -81,9 +80,9 @@ void test_bitstream()
 void test_jpeg_segment_writing()
 {
     PRINT_TEST_NAME;
-    auto image = loadPPM("res/tester_p3.ppm");
-    //image.writeJPEG(L"tester_p3.jpg");
-    timeFn([&]() { image.writeJPEG(L"tester_p3.jpg"); });
+    Image image(1, 1, Image::ColorSpace::RGB);
+    timeFn("loading draigoch", [&]() { image = loadPPM("res/Draigoch.ppm"); });
+    timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
 }
 
 int main()
