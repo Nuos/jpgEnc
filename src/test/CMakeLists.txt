@@ -3,6 +3,7 @@ set(SOURCE_FILES_UNIT_TEST
     common.cpp
     ImageTest.cpp
     BitstreamGenericTest.cpp
+    HuffmanTest.cpp
     )
     
 set(SOURCE_FILES_PERF_TEST
