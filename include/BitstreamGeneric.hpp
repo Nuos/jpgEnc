@@ -85,6 +85,8 @@ public:
     // others
     size_t size() const;
     void fill(); // fill remaining bits in the last block with 1s
+    template<typename BlockType>
+    friend bool operator==(const Bitstream_Generic<BlockType>& lhs, const Bitstream_Generic<BlockType>& rhs);
 };
 
 //
@@ -181,6 +183,11 @@ void Bitstream_Generic<BlockType>::fill()
     // set all remaining bits in the last block to 1
     while (bit_idx <= block_size)
         *this << true;
+}
+
+template<typename BlockType>
+bool operator==(const Bitstream_Generic<BlockType>& lhs, const Bitstream_Generic<BlockType>& rhs) {
+    return lhs.bits == rhs.bits && lhs.size() == rhs.size();
 }
 
 template<typename BlockType>

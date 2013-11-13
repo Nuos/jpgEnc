@@ -104,4 +104,15 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     Bitstream8 bs2{ 0, 0, 0, 0, 0, 0, 0, 0 };
     bs2.fill();
     BOOST_CHECK_EQUAL(bs2.size(), 8);
+
+    // comparison operator
+    Bitstream8 bs3{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1 };
+    Bitstream8 bs4{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1 };
+    BOOST_CHECK_EQUAL(bs3, bs4);
+
+    Bitstream8 bs5{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0 };
+    BOOST_CHECK_NE(bs3, bs5);
+
+    Bitstream8 bs6{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0 };
+    BOOST_CHECK_NE(bs3, bs6);
 }
