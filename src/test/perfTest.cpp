@@ -31,7 +31,6 @@ void timeFn(std::string desc, std::function<void()> fn)
 
 void timeFn(std::function<void()> fn) { timeFn("", fn); }
 
-
 template <typename TestType>
 void test_bitstream()
 {
@@ -65,36 +64,41 @@ void test_bitstream()
         // writing bitstream
         std::ofstream bitset_out("saved_bitset", std::fstream::binary);
         bitset_out << bitset;
-        }
+    }
 
     Bitstream in;
     {
         // reading bitstream
         std::ifstream bitset_in("saved_bitset", std::fstream::binary);
         bitset_in >> in;
-        }
+    }
     end = high_resolution_clock::now();
 
     std::cout << "Writing to and reading from file: " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 }
 
+void test_ppm_loading() {
+    PRINT_TEST_NAME;
+    timeFn("loading p3 ppm", [&]() { loadPPM("res/tester_p3.ppm"); });
+    timeFn("loading p6 ppm", [&]() { loadPPM("res/tester_p6.ppm"); });
+    timeFn("loading draigoch p6 ppm", [&]() { loadPPM("res/Draigoch_p6.ppm"); });
+    timeFn("loading draigoch p3 ppm", [&]() { loadPPM("res/Draigoch_p3.ppm"); });
+}
+
 void test_jpeg_segment_writing()
 {
     PRINT_TEST_NAME;
-    auto image = loadPPM("res/tester_p3.ppm");
-    //image.writeJPEG(L"tester_p3.jpg");
-    timeFn([&]() { image.writeJPEG(L"tester_p3.jpg"); });
+    auto image = loadPPM("res/Draigoch_p6.ppm");
+    timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
 }
 
 int main()
 {
-    srand((unsigned int) time(NULL));
-
     test_bitstream<boost::dynamic_bitset<>>();
     test_bitstream<Bitstream64>();
     test_bitstream<Bitstream8>();
 
-    //timeFn("\nWriting JPEG Segments", &test_jpeg_segment_writing);
+    test_ppm_loading();
     test_jpeg_segment_writing();
 
     return 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Image.hpp"
+#include <ostream>
 
 //
 // JPEG stuff
@@ -20,8 +21,8 @@ namespace Segment
     }
 
     // getting the high byte of a int
-    inline Byte getHi(int i) { return (i & 0xFF00) >> 8; }
-    inline Byte getLo(int i) { return (i & 0x00FF); }
+    inline Byte getHi(short i) { return (i & 0xFF00) >> 8; }
+    inline Byte getLo(short i) { return (i & 0x00FF); }
 
     // stuff for the component (Y, Cb or Cr) config
     namespace CompSetup
@@ -40,10 +41,6 @@ namespace Segment
         };
     }
 
-    //static const Byte  mSOI[2] = { 0xff, 0xd8 };
-    //static const Byte  mEOI[2] = { 0xff, 0xd9 };
-    //static const Byte  mDHT[2] = { 0xff, 0xc4 };
-
     struct sSOI
     {
         const Bytes<2> marker;
@@ -52,8 +49,16 @@ namespace Segment
         sSOI()
             : marker{ { 0xff, 0xd8 } }
         {}
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sSOI& SOI)
+        {
+            const auto& segment = SOI;
+            out.write((const char*)&segment, sizeof(segment));
+            return out;
+        }
     };
-    static sSOI SOI; // prefilled/predefined APP0 segment
+    static sSOI SOI;
 
     struct sEOI
     {
@@ -63,13 +68,21 @@ namespace Segment
         sEOI()
             : marker{ { 0xff, 0xd9 } }
         {}
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sEOI& EOI)
+        {
+            const auto& segment = EOI;
+            out.write((const char*)&segment, sizeof(segment));
+            return out;
+        }
     };
-    static sEOI EOI; // prefilled/predefined APP0 segment
+    static sEOI EOI;
 
     struct sAPP0
     {
         const Bytes<2> marker;
-        Bytes<2> len;               // Fill that! HI/LO | Constraint: >= 16
+        Bytes<2> len;               // Fill that! HI/LO | Constraint: >= 16, without marker
         const Bytes<5> type;
         const Bytes<2> rev;
         const Bytes<1> pixelsize;
@@ -80,18 +93,27 @@ namespace Segment
         // defaults
         sAPP0()
             : marker{ { 0xff, 0xe0 } },
-            len{ { 0, 0 } },
+            len{ { 0, 16 } }, // length without thumbnail
             type{ { 'J', 'F', 'I', 'F', '\0' } },
             rev{ { 1, 1 } },
             pixelsize{ { 0 } },
-            x_density{ { 0, 0 } },
-            y_density{ { 0, 0 } },
+            x_density{ { 0, 0x48 } }, // arbitrary value?!
+            y_density{ { 0, 0x48 } }, // arbitrary value?!
             thumbnail_size{ { 0, 0 } }
         {}
 
-        void setLen(int _len) { set(len, { getHi(_len), getLo(_len) }); }
-        void setXdensity(int _den) { set(x_density, { getHi(_den), getLo(_den) }); }
-        void setYdensity(int _den) { set(y_density, { getHi(_den), getLo(_den) }); }
+        // setter
+        sAPP0& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+        sAPP0& setXdensity(short _den) { set(x_density, { getHi(_den), getLo(_den) }); return *this; }
+        sAPP0& setYdensity(short _den) { set(y_density, { getHi(_den), getLo(_den) }); return *this; }
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sAPP0& APP0)
+        {
+            const auto& segment = APP0;
+            out.write((const char*)&segment, sizeof(segment));
+            return out;
+        }
     };
     static sAPP0 APP0; // prefilled/predefined APP0 segment
 
@@ -103,25 +125,47 @@ namespace Segment
                               // Constraint: 8 + num components * 3
                               // 1 component (Y) or 3 components (YCbCr)
         const Bytes<1> precision;
-        Bytes<2> image_size_x;       // Fill that! HI/LO >0!
         Bytes<2> image_size_y;       // Fill that! HI/LO >0!
+        Bytes<2> image_size_x;       // Fill that! HI/LO >0!
         const Bytes<1> component_count;
         Bytes<num_components * 3> component_setup; // Fill that!
 
-        // const defaults
+        // defaults
         sSOF0()
+            : sSOF0{ 0, 0, {} }
+        {}
+
+        // parametrized constructor
+        sSOF0(int size_x,
+              int size_y,
+              std::initializer_list<Byte> comp_setup = {
+                  CompSetup::Y, CompSetup::NoSubSampling, 0,
+                  CompSetup::Cb, CompSetup::Half, 1,
+                  CompSetup::Cr, CompSetup::Half, 2,
+              }
+        )
             : marker{ { 0xff, 0xc0 } },
             len{ { 0, 8 + num_components * 3 } },
             precision{ { 8 } },
-            image_size_x{ { 0, 0 } },
-            image_size_y{ { 0, 0 } },
             component_count{ { num_components } },
-            component_setup{ { 0 } }
-        {}
+            image_size_x{ { getHi(size_x), getLo(size_x) } },
+            image_size_y{ { getHi(size_y), getLo(size_y) } }
+        {
+            set(component_setup, comp_setup);
+        }
 
-        void setImageSizeX(int _sz) { set(image_size_x, { getHi(_sz), getLo(_sz) }); }
-        void setImageSizeY(int _sz) { set(image_size_y, { getHi(_sz), getLo(_sz) }); }
-        void setCompSetup(std::initializer_list<Byte> comp_setup) { set(component_setup, comp_setup); }
+        // setter
+        sSOF0& setImageSizeX(short _sz) { set(image_size_x, { getHi(_sz), getLo(_sz) }); return *this; }
+        sSOF0& setImageSizeY(short _sz) { set(image_size_y, { getHi(_sz), getLo(_sz) }); return *this; }
+        sSOF0& setCompSetup(std::initializer_list<Byte> comp_setup) { set(component_setup, comp_setup); return *this; }
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sSOF0<num_components>& SOF0)
+        {
+            const auto& segment = SOF0;
+            out.write((const char*)&segment, sizeof(segment));
+            return out;
+        }
     };
     static sSOF0<1> SOF0_1c; // prefilled/predefined SOF0 segment with 1 component/channel (Y, grayscale)
     static sSOF0<3> SOF0_3c; // prefilled/predefined SOF0 segment with 3 components/channels (color image)

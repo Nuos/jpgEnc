@@ -209,15 +209,22 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         img.writeJPEG(L"abc.jpeg");
     }
 
+    // writing jpeg segments
+    {
+        auto image = loadPPM("res/Draigoch_p6.ppm");
+        image.writeJPEG(L"Draigoch.jpeg");
+    }
+
+    // setting segment data
     {
         using namespace Segment;
 
         // APP0 Seg
         BOOST_CHECK_EQUAL(18, sizeof(APP0));
 
-        APP0.setLen(256);
-        APP0.setXdensity(1);
-        APP0.setYdensity(1);
+        APP0.setLen(256)
+            .setXdensity(1)
+            .setYdensity(1);
 
         BOOST_CHECK_EQUAL(APP0.len[0], 1);
         BOOST_CHECK_EQUAL(APP0.len[1], 0);
@@ -233,9 +240,9 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         BOOST_CHECK_EQUAL(13, sizeof(Segment::SOF0_1c));
         BOOST_CHECK_EQUAL(19, sizeof(Segment::SOF0_3c));
 
-        SOF0_3c.setImageSizeX(256);
-        SOF0_3c.setImageSizeY(256);
-        SOF0_3c.setCompSetup(
+        SOF0_3c.setImageSizeX(256)
+               .setImageSizeY(256)
+               .setCompSetup(
         { CompSetup::Y, CompSetup::NoSubSampling, 0,
           CompSetup::Cb, CompSetup::Half, 1,
           CompSetup::Cr, CompSetup::Half, 2, }
