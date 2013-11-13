@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
     // writing jpeg segments
     {
-        auto image = loadPPM("res/Draigoch.ppm");
+        auto image = loadPPM("res/Draigoch_p6.ppm");
         image.writeJPEG(L"Draigoch.jpeg");
     }
 
