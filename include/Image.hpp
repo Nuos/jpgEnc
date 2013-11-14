@@ -19,6 +19,8 @@ class Image;
 // load a ppm file (P3 or P6 version)
 Image loadPPM(std::string path);
 
+// fast version of atoi. No error checking, nothing.
+int fast_atoi(const char * str);
 
 // image class handling three channels (RGB, YUV, whatever) with one byte pixels
 class Image
