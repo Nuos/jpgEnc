@@ -192,9 +192,9 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                     auto& g = G(x);
                     auto& b = B(x);
 
-                    converted. Y(x)  = static_cast<Byte>(Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b));
-                    converted.Cb(x) = static_cast<Byte>(Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
-                    converted.Cr(x) = static_cast<Byte>(Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
+                    converted. Y(x)  = static_cast<Byte>((Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b)	+ 0.5f));
+					converted.Cb(x) = static_cast<Byte>((Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b)	+ 0.5f));
+					converted.Cr(x) = static_cast<Byte>((Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b)	+ 0.5f));
                 }
             }
             break;
@@ -218,9 +218,9 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                     auto cb = Cb(x) - Flat[1];
                     auto cr = Cr(x) - Flat[2];
 
-                    converted. Y(x)  = static_cast<Byte>(r[0] * y + r[1] * cb + r[2] * cr);
-                    converted.Cb(x) = static_cast<Byte>(g[0] * y + g[1] * cb + g[2] * cr);
-                    converted.Cr(x) = static_cast<Byte>(b[0] * y + b[1] * cb + b[2] * cr);
+                    converted. Y(x)  = static_cast<Byte>((r[0] * y + r[1] * cb + r[2] * cr)	+ 0.5f);
+					converted.Cb(x) = static_cast<Byte>((g[0] * y + g[1] * cb + g[2] * cr)	+ 0.5f);
+					converted.Cr(x) = static_cast<Byte>((b[0] * y + b[1] * cb + b[2] * cr)	+ 0.5f);
                 }
             }
             break;
@@ -364,6 +364,16 @@ void Image::applySubsampling(SubsamplingMode mode)
 //
 // PPM loading
 //
+
+// fast version of atoi. No error checking, nothing.
+int fast_atoi(const char * str)
+{
+	int val = 0;
+	while (*str) {
+		val = val * 10 + (*str++ - '0');
+	}
+	return val;
+};
 struct PPMFileBuffer
 {
     std::string& file;
@@ -430,13 +440,13 @@ void loadP3PPM(PPMFileBuffer& file, Image& img) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
         file.read_word(buf);
-        img.R(x) = std::stoi(buf);
+		img.R(x) = fast_atoi(buf.c_str());
 
         file.read_word(buf);
-        img.G(x) = std::stoi(buf);
+		img.G(x) = fast_atoi(buf.c_str());
 
         file.read_word(buf);
-        img.B(x) = std::stoi(buf);
+		img.B(x) = fast_atoi(buf.c_str());
     }
 }
 

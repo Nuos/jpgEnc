@@ -38,12 +38,12 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
     BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 132);
+    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 133);
     BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
 
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
     BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 132);
+    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 133);
     BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
