@@ -13,6 +13,7 @@ using std::priority_queue;
 using std::vector;
 using CodeMap = std::unordered_map<int, Bitstream>;
 
+
 class Node {
 public:
     Node(double probability, Node* left, Node* right)
@@ -32,6 +33,19 @@ public:
     ~Node() {
         delete left;
         delete right;
+    }
+
+    // longest path to a child
+    // easily cacheable...
+    int height() const {
+        if (is_leaf)
+            return 0;
+        else if (left && right)
+            return std::max(left->height(), right->height()) + 1;
+        else if (left)
+            return left->height() + 1;
+        else
+            return right->height() + 1;
     }
 
 public:
@@ -69,15 +83,19 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
         Node* second = nodes.top();
         nodes.pop();
 
+        // always put the higher tree to the right
+        if (first->height() > second->height()) {
+            std::swap(first, second);
+        }
         nodes.emplace(new Node(first->probability + second->probability, first, second));
     }
     return nodes.top();
 }
 
 
-void generate_code(Node* node, Bitstream& prefix, CodeMap& code_map) {
+void generate_codes(Node* node, Bitstream& prefix, CodeMap& code_map) {
     if (node->is_leaf) {
-        // arrived at leaf, so we are done
+        // arrived at leaf, so we are done and save the huffman code
         code_map[node->symbol] = prefix;
     }
     else {
@@ -85,17 +103,16 @@ void generate_code(Node* node, Bitstream& prefix, CodeMap& code_map) {
             // create new code prefix for the left part of the tree
             Bitstream new_prefix = prefix;
             new_prefix << false;
-            generate_code(node->left, new_prefix, code_map);
+            generate_codes(node->left, new_prefix, code_map);
         }
         if (node->right) {
             // no copy of prefix, as it isn't used anywhere anymore
             prefix << true;
-            generate_code(node->right, prefix, code_map);
+            generate_codes(node->right, prefix, code_map);
 
         }
     }
 }
-
 
 
 CodeMap generate_code_map(std::vector<int> text) {
@@ -112,7 +129,7 @@ CodeMap generate_code_map(std::vector<int> text) {
     Node* root = generate_huff_tree(symbol_counts, text.size());
 
     CodeMap code_map;
-    generate_code(root, Bitstream(), code_map);
+    generate_codes(root, Bitstream(), code_map);
 
     delete root;
     return code_map;
