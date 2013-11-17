@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_CASE(test_tree) {
     // The root of a Huffman code is placed toward the MSB of the byte, 
     // and successive bits are placed in the direction MSB to LSB of the byte
     BOOST_CHECK_EQUAL(code_map[1], Bitstream({ 1, 1, 0 }));
-    BOOST_CHECK_EQUAL(code_map[2], Bitstream({ 1, 1, 1 }));
+    BOOST_CHECK_EQUAL(code_map[2], Bitstream({ 1, 1, 1, 0 }));
     BOOST_CHECK_EQUAL(code_map[4], Bitstream({ 1, 0 }));
     BOOST_CHECK_EQUAL(code_map[5], Bitstream({ 0 }));
     BOOST_CHECK_EQUAL(code_map.size(), 4);

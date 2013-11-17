@@ -93,6 +93,26 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
 }
 
 
+void replace_rightmost_leaf(Node* root) {
+    assert(root != nullptr);
+    assert(!root->is_leaf);
+
+    Node* node = root;
+    Node* parent = nullptr;
+
+    while (node->right) {
+        parent = node;
+        node = node->right;
+    }
+
+    if (!parent || !node->is_leaf)
+        return;
+
+    // replace rightmost leaf with new node and leaf as left child
+    parent->right = new Node(node->probability, node, nullptr);
+}
+
+
 void generate_codes(Node* node, Bitstream& prefix, CodeMap& code_map) {
     if (node->is_leaf) {
         // arrived at leaf, so we are done and save the huffman code
@@ -127,6 +147,7 @@ CodeMap generate_code_map(std::vector<int> text) {
     }
 
     Node* root = generate_huff_tree(symbol_counts, text.size());
+    replace_rightmost_leaf(root);
 
     CodeMap code_map;
     generate_codes(root, Bitstream(), code_map);
