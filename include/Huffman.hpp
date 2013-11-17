@@ -89,13 +89,18 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
         }
         nodes.emplace(new Node(first->probability + second->probability, first, second));
     }
-    return nodes.top();
+    
+    Node* root = nodes.top();
+    // handle the case where we only have a single symbol
+    if (root->is_leaf)
+        return new Node(root->probability, root, nullptr);
+    else
+        return root;
 }
 
 
 void replace_rightmost_leaf(Node* root) {
     assert(root != nullptr);
-    assert(!root->is_leaf);
 
     Node* node = root;
     Node* parent = nullptr;
@@ -136,6 +141,8 @@ void generate_codes(Node* node, Bitstream& prefix, CodeMap& code_map) {
 
 
 CodeMap generate_code_map(std::vector<int> text) {
+    assert(text.size() > 0);
+
     unordered_map<int, int> symbol_counts;
     for (auto& symbol : text) {
         if (symbol_counts.count(symbol) == 0) {
@@ -147,6 +154,7 @@ CodeMap generate_code_map(std::vector<int> text) {
     }
 
     Node* root = generate_huff_tree(symbol_counts, text.size());
+    // prevents a huffman code consiting of only 1s
     replace_rightmost_leaf(root);
 
     CodeMap code_map;

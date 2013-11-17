@@ -15,4 +15,8 @@ BOOST_AUTO_TEST_CASE(test_tree) {
     BOOST_CHECK_EQUAL(code_map[4], Bitstream({ 1, 0 }));
     BOOST_CHECK_EQUAL(code_map[5], Bitstream({ 0 }));
     BOOST_CHECK_EQUAL(code_map.size(), 4);
+
+    CodeMap code_map2 = generate_code_map({ 1 });
+    BOOST_CHECK_EQUAL(code_map2[1], Bitstream({ 0 }));
+    BOOST_CHECK_EQUAL(code_map2.size(), 1);
 }
