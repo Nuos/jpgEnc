@@ -46,6 +46,36 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     BOOST_CHECK(b0[17] == true);
     BOOST_CHECK_EQUAL(b0.size(), 18);
 
+    // appending arbitrary number of bits from an int
+    auto b8 = Bitstream8();
+
+    // 0011 0100 0000 0000 ...
+    b8.push_back(0x34000000, 6);
+
+    BOOST_CHECK(b8[0] == 0);
+    BOOST_CHECK(b8[1] == 0);
+    BOOST_CHECK(b8[2] == 1);
+    BOOST_CHECK(b8[3] == 1);
+    BOOST_CHECK(b8[4] == 0);
+    BOOST_CHECK(b8[5] == 1);
+
+    // extract arbitrary number of bits (up to 32 bits)
+    b8 = Bitstream8{1,0,0,1,1,1};
+
+    auto res = b8.extract(3, 0);
+    BOOST_CHECK_EQUAL(res, 4);
+
+    res = b8.extract(4, 2);
+    BOOST_CHECK_EQUAL(res, 7);
+
+    b8 = Bitstream8{ 1, 0, 0, 1, 1, 1, 0, 0,    1, 0, 1 };
+
+    res = b8.extract(11, 0);
+    BOOST_CHECK_EQUAL(res, 1253);
+
+    res = b8.extract(5, 6);
+    BOOST_CHECK_EQUAL(res, 5);
+
     // writing / reading file
     Bitstream bitset;
     srand((unsigned int) time(NULL));
@@ -115,4 +145,5 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
 
     Bitstream8 bs6{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0 };
     BOOST_CHECK_NE(bs3, bs6);
+
 }

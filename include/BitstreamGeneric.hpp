@@ -22,24 +22,24 @@ public:
 
         friend class Bitstream_Generic<BlockType>;
         BitView(ContainerType& bstream, unsigned int block_idx, uint8_t bit_idx)
-            : bits(bstream),
+            : blocks(bstream),
             block_index(block_idx),
             bit_index(bit_idx)
         {}
 
-        ContainerType& bits;
+        ContainerType& blocks;
         const unsigned int block_index;
         const uint8_t bit_index;
 
     public:
         operator bool() const
         {
-            return (bits[block_index] & ((BlockType) 1 << bit_index)) != 0;
+            return (blocks[block_index] & ((BlockType) 1 << bit_index)) != 0;
         }
 
         void operator=(bool val)
         {
-            auto& block = bits[block_index];
+            auto& block = blocks[block_index];
             if (val) {
                 // set bit at bit_idx
                 auto mask = (BlockType) 1 << bit_index;
@@ -54,7 +54,7 @@ public:
     };
 
 private:
-    ContainerType bits;
+    ContainerType blocks;
     uint8_t bit_idx;
     size_t sz;
 
@@ -68,10 +68,12 @@ public:
     Bitstream_Generic();
     Bitstream_Generic(std::initializer_list<bool> args);
 
-    // appending bits
+    // appending bits / bitstreams
     Bitstream_Generic& operator<<(bool val);
     Bitstream_Generic& operator<<(std::initializer_list<bool> args);
+    Bitstream_Generic& operator<<(const Bitstream_Generic<BlockType>& stream);
     Bitstream_Generic& push_back(bool val);
+    Bitstream_Generic& push_back(uint32_t data, int number_of_bits);
 
     // streaming
     template<typename BlockType>
@@ -81,6 +83,9 @@ public:
 
     // accessing
     BitView operator[](unsigned int pos);
+
+    // code begins at MSB
+    uint32_t extract(uint8_t number_of_bits, size_t from_position);
 
     // others
     size_t size() const;
@@ -95,7 +100,7 @@ public:
 template<typename BlockType>
 Bitstream_Generic<BlockType>::Bitstream_Generic()
 : bit_idx(block_size),
-bits(),
+blocks(),
 sz(0)
 {}
 
@@ -111,11 +116,11 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(bool val)
 {
     // make bit stream longer if we run out of space
     if (bit_idx >= block_size) {
-        bits.push_back(0);
+        blocks.push_back(0);
         bit_idx = block_size - 1;
     }
 
-    auto& block = bits.back();
+    auto& block = blocks.back();
     if (val) {
         // set bit at bit_idx
         auto mask = (BlockType) 1 << bit_idx;
@@ -131,7 +136,7 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(bool val)
 template<typename BlockType>
 Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(BlockType val)
 {
-    bits.push_back(val);
+    blocks.push_back(val);
     sz += block_size;
     return *this;
 }
@@ -147,6 +152,15 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(std::init
 }
 
 template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(const Bitstream_Generic<BlockType>& stream)
+{
+    for (auto i = 0U; i < stream.size(); ++i) {
+        *this << stream[i];
+    }
+    return *this;
+}
+
+template<typename BlockType>
 Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back(bool val)
 {
     *this << val;
@@ -154,10 +168,25 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back(bool val)
 }
 
 template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back(uint32_t data, int number_of_bits)
+{
+    // append number_of_bits from MSB
+    unsigned int mask = 1 << 31;
+    while (number_of_bits > 0) {
+        bool bit = (data & mask) != 0;
+        *this << bit;
+
+        --number_of_bits;
+        mask >>= 1;
+    }
+    return *this;
+}
+
+
+template<typename BlockType>
 std::ostream& operator<<(std::ostream& out, const Bitstream_Generic<BlockType>& bitstream)
 {
-    for (const auto& bit : bitstream.bits)
-        out.write((const char*)&bit, sizeof(bit));
+    out.write((const char*)&bitstream.blocks[0], sizeof(BlockType)*bitstream.blocks.size());
     return out;
 }
 
@@ -187,7 +216,7 @@ void Bitstream_Generic<BlockType>::fill()
 
 template<typename BlockType>
 bool operator==(const Bitstream_Generic<BlockType>& lhs, const Bitstream_Generic<BlockType>& rhs) {
-    return lhs.bits == rhs.bits && lhs.size() == rhs.size();
+    return lhs.blocks == rhs.blocks && lhs.size() == rhs.size();
 }
 
 template<typename BlockType>
@@ -196,7 +225,44 @@ typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::ope
     auto block_idx = static_cast<unsigned int>(pos / block_size);
     auto bit_idx = static_cast<uint8_t>(block_size - (pos - block_idx * block_size) - 1);
 
-    return BitView(bits, block_idx, bit_idx);
+    return BitView(blocks, block_idx, bit_idx);
+}
+
+template<typename BlockType>
+uint32_t Bitstream_Generic<BlockType>::extract(uint8_t number_of_bits, size_t from_position)
+{
+    assert(number_of_bits <= 32);
+    assert(from_position + number_of_bits - 1 < size());
+
+    uint32_t result = 0;
+    auto block_idx = from_position / block_size;
+
+    while (number_of_bits > 0) {
+        auto& block = blocks[block_idx];
+
+        auto bit_idx_from = block_size - (from_position % block_size) - 1;
+
+        auto bit_idx_to = bit_idx_from;
+        if (number_of_bits > bit_idx_from)
+            bit_idx_to = 0;
+        else
+            bit_idx_to = bit_idx_from + 1 - number_of_bits;
+
+        // build mask
+        BlockType mask = (1 << (bit_idx_from + 1)) - 1;
+        mask -= (1 << (bit_idx_to)) - 1;
+
+        // extract bits
+        result += ((block & mask) >> (bit_idx_to));
+
+        number_of_bits -= bit_idx_from + 1 - bit_idx_to;
+        from_position = 0; // always start at the beginning of the next block
+        ++block_idx;
+        if (number_of_bits > 0)
+            result <<= (number_of_bits > block_size ? block_size : number_of_bits);
+    }
+
+    return result;
 }
 
 // Convenience definitions (new type alias format)
