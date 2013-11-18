@@ -34,7 +34,7 @@ public:
     Node* right;
 };
 
-// a singe code for a symbol
+// a huffman code for a symbol
 struct Code {
     Code() : code(0), length(0) {}
     Code(uint32_t code, uint8_t length)
