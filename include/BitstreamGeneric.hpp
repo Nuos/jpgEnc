@@ -84,7 +84,7 @@ public:
     // accessing
     BitView operator[](unsigned int pos);
 
-    // code begins at MSB
+    // bit at from_position will be the MSB
     template<typename T>
     T extractT(uint8_t number_of_bits, size_t from_position);
     uint32_t extract(uint8_t number_of_bits, size_t from_position) { return extractT<uint32_t>(number_of_bits, from_position); }
@@ -237,6 +237,7 @@ T Bitstream_Generic<BlockType>::extractT(uint8_t number_of_bits, size_t from_pos
     assert(number_of_bits <= sizeof(T)*8);
     assert(from_position + number_of_bits - 1 < size());
 
+    auto num_bits = number_of_bits;
     T result = 0;
     auto block_idx = from_position / block_size;
 
@@ -264,6 +265,10 @@ T Bitstream_Generic<BlockType>::extractT(uint8_t number_of_bits, size_t from_pos
         if (number_of_bits > 0)
             result <<= (number_of_bits > block_size ? block_size : number_of_bits);
     }
+
+    // make the first extracted bit the MSB
+    auto shift = sizeof(T)* 8 - num_bits;
+    result <<= shift;
 
     return result;
 }

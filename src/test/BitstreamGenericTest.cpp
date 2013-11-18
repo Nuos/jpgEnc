@@ -62,32 +62,32 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     // extract arbitrary number of bits (up to 32 bits)
     b8 = Bitstream8{1,0,0,1,1,1};
 
-    auto res = b8.extract(3, 0);
-    BOOST_CHECK_EQUAL(res, 4);
+    auto res = b8.extractT<uint16_t>(3, 0);
+    BOOST_CHECK_EQUAL(res, 0x8000); // 10000..0
 
-    res = b8.extract(4, 2);
-    BOOST_CHECK_EQUAL(res, 7);
+    res = b8.extractT<uint16_t>(4, 2);
+    BOOST_CHECK_EQUAL(res, 0x7000); // 011100..0
 
     b8 = Bitstream8{ 1, 0, 0, 1, 1, 1, 0, 0,    1, 0, 1 };
 
-    res = b8.extract(11, 0);
-    BOOST_CHECK_EQUAL(res, 1253);
+    res = b8.extractT<uint16_t>(11, 0);
+    BOOST_CHECK_EQUAL(res, 0x9CA0); // 1001110010100..0
 
-    res = b8.extract(5, 6);
-    BOOST_CHECK_EQUAL(res, 5);
+    res = b8.extractT<uint16_t>(5, 6);
+    BOOST_CHECK_EQUAL(res, 0x2800); // 0010100..0
 
     // extracting different types
     auto u8 = b8.extractT<uint8_t>(4, 1);
-    BOOST_CHECK_EQUAL(u8, 3);
+    BOOST_CHECK_EQUAL(u8, 0x30); // 00110000
 
     auto u16 = b8.extractT<uint16_t>(b8.size(), 0);
-    BOOST_CHECK_EQUAL(u16, 1253);
+    BOOST_CHECK_EQUAL(u16, 0x9CA0); // 1001 1100 1010 0000
 
     auto u32 = b8.extractT<uint32_t>(5, 6);
-    BOOST_CHECK_EQUAL(u32, 5);
+    BOOST_CHECK_EQUAL(u32, 0x28000000); // 0010 100..0
 
     auto u64 = b8.extractT<uint64_t>(6, 3);
-    BOOST_CHECK_EQUAL(u64, 57);
+    BOOST_CHECK_EQUAL(u64, 0xE400000000000000); // 1110 0100 00..0
 
     // appending bitstreams
     auto b1 = Bitstream8{1, 0, 1, 1, 0, 0}; 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     b1 << b2; // appending b2 to b1
 
     BOOST_CHECK_EQUAL(b1.size(), 12);
-    BOOST_CHECK_EQUAL(b1.extract(b1.size(), 0), 2828);
+    BOOST_CHECK_EQUAL(b1.extractT<uint16_t>(b1.size(), 0), 0xB0C0);
 
     // writing / reading file
     Bitstream bitset;
