@@ -1,6 +1,8 @@
 #include "Image.hpp"
 
 #include <array>
+#include <streambuf>
+#include <sstream>
 
 #include "JpegSegments.hpp"
 
@@ -374,7 +376,7 @@ struct PPMFileBuffer
         eof{file.size()} {}
 
     Byte read_byte() {
-        return file.at(file_pos++);
+        return file[file_pos++];
     }
 
     void read_word(std::string& buf) {
@@ -456,10 +458,18 @@ Image loadPPM(std::string path) {
     if (!ppm_file.is_open())
         throw std::runtime_error("Failed to open \"" + std::string(path) + "\"");
 
-    std::string raw_buf{std::istreambuf_iterator<char>(ppm_file), std::istreambuf_iterator<char>()};
+    ppm_file.seekg(0, std::ios::end);
+    auto file_size = 0 + ppm_file.tellg();
+    ppm_file.seekg(0, std::ios::beg);
+
+    // using stringstream
+    std::stringstream strstrbuf;
+    strstrbuf << ppm_file.rdbuf();
+    auto raw_buf = strstrbuf.str();
+
     ppm_file.close();
 
-    PPMFileBuffer ppm{raw_buf};
+    PPMFileBuffer ppm{ raw_buf };
 
     std::string buf;
     buf.reserve(32);

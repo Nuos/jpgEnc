@@ -1,0 +1,16 @@
+SHA-1: b89e93aeda21b0dcea1e943fb22dfd60fa989c4f
+
+>>> test_ppm_loading:
+loading p3 ppm took 1, 0, 0 ms ~0.3 ms
+loading p6 ppm took 0, 0, 1 ms ~0.3 ms
+loading draigoch p6 ppm took 150, 149, 166 ms     ~ 155.0ms
+loading draigoch p3 ppm took 1134, 1129, 1270 ms  ~1177.6ms
+
+SHA-1: ae8d476a4008fbb3590ed8afaa1886bbbd963713
+faster file reading
+
+>>> test_ppm_loading:
+loading p3 ppm took 0, 1, 0 ms ~0.3 ms  +/- 0%
+loading p6 ppm took 0, 0, 0 ms ~0.0ms   +/- 0%
+loading draigoch p6 ppm took 133, 153, 127 ms     ~ 137.6ms  -11,2%
+loading draigoch p3 ppm took 1067, 1141, 1059 ms  ~1089.0ms  - 7,5%
