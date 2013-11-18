@@ -252,12 +252,12 @@ T Bitstream_Generic<BlockType>::extractT(uint8_t number_of_bits, size_t from_pos
         else
             bit_idx_to = bit_idx_from + 1 - number_of_bits;
 
-        // build mask
-        BlockType mask = (1 << (bit_idx_from + 1)) - 1;
-        mask -= (1 << (bit_idx_to)) - 1;
+        // build mask, make sure that calculations aren't narrowed to int or whatever (we can have up to 8byte Blocktypes!)
+        BlockType mask = ((BlockType)1 << (bit_idx_from + 1)) - 1;
+        mask -= ((BlockType)1 << (bit_idx_to)) - 1;
 
         // extract bits
-        result += ((block & mask) >> (bit_idx_to));
+        result |= ((block & mask) >> (bit_idx_to));
 
         number_of_bits -= bit_idx_from + 1 - bit_idx_to;
         from_position = 0; // always start at the beginning of the next block
