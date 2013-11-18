@@ -278,6 +278,6 @@ using Bitstream8 = Bitstream_Generic<uint8_t>;
 using Bitstream16 = Bitstream_Generic<uint16_t>;
 using Bitstream32 = Bitstream_Generic<uint32_t>;
 using Bitstream64 = Bitstream_Generic<uint64_t>;
-using Bitstream = Bitstream64;
+using Bitstream = Bitstream32;
 
 typedef std::initializer_list<bool> Bits;
