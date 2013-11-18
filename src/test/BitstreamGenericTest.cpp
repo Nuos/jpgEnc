@@ -89,6 +89,14 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     auto u64 = b8.extractT<uint64_t>(6, 3);
     BOOST_CHECK_EQUAL(u64, 57);
 
+    // appending bitstreams
+    auto b1 = Bitstream8{1, 0, 1, 1, 0, 0}; 
+    auto b2 = Bitstream8{0, 0, 1, 1, 0, 0 };
+    b1 << b2; // appending b2 to b1
+
+    BOOST_CHECK_EQUAL(b1.size(), 12);
+    BOOST_CHECK_EQUAL(b1.extract(b1.size(), 0), 2828);
+
     // writing / reading file
     Bitstream bitset;
     srand((unsigned int) time(NULL));

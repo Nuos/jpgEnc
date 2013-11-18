@@ -71,7 +71,7 @@ public:
     // appending bits / bitstreams
     Bitstream_Generic& operator<<(bool val);
     Bitstream_Generic& operator<<(std::initializer_list<bool> args);
-    Bitstream_Generic& operator<<(const Bitstream_Generic<BlockType>& stream);
+    Bitstream_Generic& operator<<(Bitstream_Generic<BlockType>& stream);
     Bitstream_Generic& push_back(bool val);
     Bitstream_Generic& push_back(uint32_t data, int number_of_bits);
 
@@ -154,7 +154,7 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(std::init
 }
 
 template<typename BlockType>
-Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(const Bitstream_Generic<BlockType>& stream)
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::operator<<(Bitstream_Generic<BlockType>& stream)
 {
     for (auto i = 0U; i < stream.size(); ++i) {
         *this << stream[i];
