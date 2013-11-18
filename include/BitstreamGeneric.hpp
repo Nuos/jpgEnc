@@ -56,7 +56,7 @@ public:
 private:
     ContainerType blocks;
     uint8_t bit_idx;
-    size_t sz;
+    unsigned int sz; // up to 4 billion bits should be enough
 
 private:
     // appending Blocks, don't let the user see this as it needs proper alignment,
@@ -85,10 +85,12 @@ public:
     BitView operator[](unsigned int pos);
 
     // code begins at MSB
-    uint32_t extract(uint8_t number_of_bits, size_t from_position);
+    template<typename T>
+    T extractT(uint8_t number_of_bits, size_t from_position);
+    uint32_t extract(uint8_t number_of_bits, size_t from_position) { return extractT<uint32_t>(number_of_bits, from_position); }
 
     // others
-    size_t size() const;
+    unsigned int size() const;
     void fill(); // fill remaining bits in the last block with 1s
     template<typename BlockType>
     friend bool operator==(const Bitstream_Generic<BlockType>& lhs, const Bitstream_Generic<BlockType>& rhs);
@@ -201,7 +203,7 @@ std::istream& operator>>(std::istream& in, Bitstream_Generic<BlockType>& bitstre
 }
 
 template<typename BlockType>
-size_t Bitstream_Generic<BlockType>::size() const
+unsigned int Bitstream_Generic<BlockType>::size() const
 {
     return sz;
 }
@@ -229,20 +231,21 @@ typename Bitstream_Generic<BlockType>::BitView Bitstream_Generic<BlockType>::ope
 }
 
 template<typename BlockType>
-uint32_t Bitstream_Generic<BlockType>::extract(uint8_t number_of_bits, size_t from_position)
+template<typename T>
+T Bitstream_Generic<BlockType>::extractT(uint8_t number_of_bits, size_t from_position)
 {
-    assert(number_of_bits <= 32);
+    assert(number_of_bits <= sizeof(T)*8);
     assert(from_position + number_of_bits - 1 < size());
 
-    uint32_t result = 0;
+    T result = 0;
     auto block_idx = from_position / block_size;
 
     while (number_of_bits > 0) {
         auto& block = blocks[block_idx];
 
-        auto bit_idx_from = block_size - (from_position % block_size) - 1;
+        uint8_t bit_idx_from = block_size - (from_position % block_size) - 1;
 
-        auto bit_idx_to = bit_idx_from;
+        uint8_t bit_idx_to;
         if (number_of_bits > bit_idx_from)
             bit_idx_to = 0;
         else
