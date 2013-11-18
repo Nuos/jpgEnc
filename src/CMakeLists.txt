@@ -5,6 +5,7 @@ file(GLOB INCLUDE_FILES_JPG_ENC
      )
 set(SOURCE_FILES_JPG_ENC
     Image.cpp
+    Huffman.cpp
     )
 
 add_library(${PROJECT_LIB} ${INCLUDE_FILES_JPG_ENC} ${SOURCE_FILES_JPG_ENC}) 
