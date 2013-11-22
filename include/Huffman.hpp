@@ -39,7 +39,11 @@ struct Code {
     Code() : code(0), length(0) {}
     Code(uint32_t code, uint8_t length)
         : code(code), length(length)
-    {}
+    {
+        // make the leftmost bit of the code the MSB
+        auto shift = sizeof(uint32_t)* 8 - length;
+        this->code <<= shift;
+    }
 
     Code(Bitstream bitstream) {
         length = bitstream.size();
@@ -55,13 +59,14 @@ struct Code {
 
 using SymbolCodeMap = std::unordered_map<int, Code>;
 
-Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total_symbols);
-void replace_rightmost_leaf(Node* root);
-// traverses the tree and creates the huffman codes
-void generate_codes(Node* node, Bitstream& prefix, SymbolCodeMap& code_map);
 
 // takes a text, caluclates the probability of every symbol and returns a map from symbols to huffman codes
 SymbolCodeMap generate_code_map(std::vector<int> text);
+
+Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total_symbols);
+// generate a list of symbols grouped by code length
+void generate_symbols_per_codelength(Node* node, int depth, vector<vector<int>>& symbols);
+SymbolCodeMap generate_codes(vector<vector<int>>& symbols);
 
 
 // en- and decoding

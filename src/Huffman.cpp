@@ -67,44 +67,43 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
 }
 
 
-void replace_rightmost_leaf(Node* root) {
-    assert(root != nullptr);
-
-    Node* node = root;
-    Node* parent = nullptr;
-
-    while (node->right) {
-        parent = node;
-        node = node->right;
-    }
-
-    if (!parent || !node->is_leaf)
-        return;
-
-    // replace rightmost leaf with new node and leaf as left child
-    parent->right = new Node(node->probability, node, nullptr);
-}
-
-
-void generate_codes(Node* node, Bitstream& prefix, SymbolCodeMap& code_map) {
+void generate_symbols_per_codelength(Node* node, int depth, vector<vector<int>>& symbols) {
     if (node->is_leaf) {
-        // arrived at leaf, so we are done and save the huffman code
-        code_map[node->symbol] = Code(prefix);
+        symbols[depth].push_back(node->symbol);
     }
     else {
         if (node->left) {
-            // create new code prefix for the left part of the tree
-            Bitstream new_prefix = prefix;
-            new_prefix << false;
-            generate_codes(node->left, new_prefix, code_map);
+            generate_symbols_per_codelength(node->left, depth + 1, symbols);
         }
         if (node->right) {
-            // no copy of prefix, as it isn't used anywhere anymore
-            prefix << true;
-            generate_codes(node->right, prefix, code_map);
-
+            generate_symbols_per_codelength(node->right, depth + 1, symbols);
         }
     }
+}
+
+
+SymbolCodeMap generate_codes(vector<vector<int>>& symbols) {
+    // based on the algorithm in
+    // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
+
+    SymbolCodeMap code_map;
+
+    uint32_t code = 0;
+    for (int length = 1; length < symbols.size(); length++) {
+        for (int symbol : symbols[length]) {
+            if (code == (1 << length) - 1) {
+                // the very last code, prevent a code consisting of only 1s
+                code_map[symbol] = Code(code << 1, length+1);
+            }
+            else {
+                code_map[symbol] = Code(code, length);
+            }
+            ++code;
+        }
+        code <<= 1;
+    }
+
+    return code_map;
 }
 
 
@@ -122,14 +121,13 @@ SymbolCodeMap generate_code_map(std::vector<int> text) {
     }
 
     Node* root = generate_huff_tree(symbol_counts, text.size());
-    // prevents a huffman code consiting of only 1s
-    replace_rightmost_leaf(root);
 
-    // max height of 32, better error handling?
-    assert(root->height() <= 32);
+    // list of symbols grouped by code length
+    // symbols_per_length = symbols[code_length]
+    vector<vector<int>> symbols(root->height()+1);
+    generate_symbols_per_codelength(root, 0, symbols);
 
-    SymbolCodeMap code_map;
-    generate_codes(root, Bitstream(), code_map);
+    SymbolCodeMap code_map = generate_codes(symbols);
 
     delete root;
     return code_map;
