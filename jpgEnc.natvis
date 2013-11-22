@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="Code">
+        <DisplayString>{{ bits={code,b}, length={(int)length,u} }}</DisplayString>
+    </Type>
+    <Type Name="Bitstream_Generic&lt;*&gt;">
+        <DisplayString>{{ num_bits={sz} }}</DisplayString>
+        <Expand>
+            <Item Name="[blocks]">blocks._Mylast - blocks._Myfirst</Item>
+            <ArrayItems>
+                <Size>blocks._Mylast - blocks._Myfirst</Size>
+                <ValuePointer>blocks._Myfirst,b</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+</AutoVisualizer>
