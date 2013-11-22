@@ -61,17 +61,17 @@ using SymbolCodeMap = std::unordered_map<int, Code>;
 
 
 // takes a text, caluclates the probability of every symbol and returns a map from symbols to huffman codes
-SymbolCodeMap generate_code_map(std::vector<int> text);
+SymbolCodeMap generateCodeMap(std::vector<int> text);
 
-Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total_symbols);
+Node* generateHuffTree(unordered_map<int, int> symbol_counts, int total_symbols);
 // generate a list of symbols grouped by code length
-void generate_symbols_per_codelength(Node* node, int depth, vector<vector<int>>& symbols);
-SymbolCodeMap generate_codes(vector<vector<int>>& symbols);
+void generateSymbolsPerCodelength(Node* node, int depth, vector<vector<int>>& symbols);
+SymbolCodeMap generateCodes(vector<vector<int>>& symbols);
 
 
 // en- and decoding
-Bitstream huffman_encode(vector<int> text, SymbolCodeMap code_map);
-vector<int> huffman_decode(Bitstream bitstream, SymbolCodeMap code_map);
+Bitstream huffmanEncode(vector<int> text, SymbolCodeMap code_map);
+vector<int> huffmanDecode(Bitstream bitstream, SymbolCodeMap code_map);
 
 struct DecodeEntry {
     DecodeEntry(uint32_t code, uint8_t code_length, int symbol);

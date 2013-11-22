@@ -32,7 +32,34 @@ int Node::height() const {
 }
 
 
-Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
+SymbolCodeMap generateCodeMap(std::vector<int> text) {
+    assert(text.size() > 0);
+
+    unordered_map<int, int> symbol_counts;
+    for (auto& symbol : text) {
+        if (symbol_counts.count(symbol) == 0) {
+            symbol_counts.emplace(symbol, 1);
+        }
+        else {
+            ++symbol_counts[symbol];
+        }
+    }
+
+    Node* root = generateHuffTree(symbol_counts, text.size());
+
+    // list of symbols grouped by code length
+    // symbols_per_length = symbols[code_length]
+    vector<vector<int>> symbols(root->height() + 1);
+    generateSymbolsPerCodelength(root, 0, symbols);
+
+    SymbolCodeMap code_map = generateCodes(symbols);
+
+    delete root;
+    return code_map;
+}
+
+
+Node* generateHuffTree(unordered_map<int, int> symbol_counts, int total) {
     auto comp = [](const Node* lhs, const Node* rhs) {
         return lhs->probability > rhs->probability;
     };
@@ -67,22 +94,22 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
 }
 
 
-void generate_symbols_per_codelength(Node* node, int depth, vector<vector<int>>& symbols) {
+void generateSymbolsPerCodelength(Node* node, int depth, vector<vector<int>>& symbols) {
     if (node->is_leaf) {
         symbols[depth].push_back(node->symbol);
     }
     else {
         if (node->left) {
-            generate_symbols_per_codelength(node->left, depth + 1, symbols);
+            generateSymbolsPerCodelength(node->left, depth + 1, symbols);
         }
         if (node->right) {
-            generate_symbols_per_codelength(node->right, depth + 1, symbols);
+            generateSymbolsPerCodelength(node->right, depth + 1, symbols);
         }
     }
 }
 
 
-SymbolCodeMap generate_codes(vector<vector<int>>& symbols) {
+SymbolCodeMap generateCodes(vector<vector<int>>& symbols) {
     // based on the algorithm in
     // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
 
@@ -107,34 +134,7 @@ SymbolCodeMap generate_codes(vector<vector<int>>& symbols) {
 }
 
 
-SymbolCodeMap generate_code_map(std::vector<int> text) {
-    assert(text.size() > 0);
-
-    unordered_map<int, int> symbol_counts;
-    for (auto& symbol : text) {
-        if (symbol_counts.count(symbol) == 0) {
-            symbol_counts.emplace(symbol, 1);
-        }
-        else {
-            ++symbol_counts[symbol];
-        }
-    }
-
-    Node* root = generate_huff_tree(symbol_counts, text.size());
-
-    // list of symbols grouped by code length
-    // symbols_per_length = symbols[code_length]
-    vector<vector<int>> symbols(root->height()+1);
-    generate_symbols_per_codelength(root, 0, symbols);
-
-    SymbolCodeMap code_map = generate_codes(symbols);
-
-    delete root;
-    return code_map;
-}
-
-
-Bitstream huffman_encode(vector<int> text, SymbolCodeMap code_map) {
+Bitstream huffmanEncode(vector<int> text, SymbolCodeMap code_map) {
     Bitstream result;
     for (auto symbol : text) {
         const Code& code = code_map[symbol];
@@ -144,17 +144,19 @@ Bitstream huffman_encode(vector<int> text, SymbolCodeMap code_map) {
 }
 
 // fill everything to the right of the code with 1s
-uint32_t fill_rest_with_ones(uint32_t code, uint8_t code_length) {
+uint32_t fillRestWithOnes(uint32_t code, uint8_t code_length) {
     return code | ((1 << (32 - code_length)) - 1);
 }
+
 
 DecodeEntry::DecodeEntry(uint32_t code, uint8_t code_length, int symbol) {
     this->symbol = symbol;
     this->code_length = code_length;
-    this->code = fill_rest_with_ones(code, code_length);
+    this->code = fillRestWithOnes(code, code_length);
 }
 
-vector<int> huffman_decode(Bitstream bitstream, SymbolCodeMap code_map) {
+
+vector<int> huffmanDecode(Bitstream bitstream, SymbolCodeMap code_map) {
     vector<DecodeEntry> code_table;
     code_table.reserve(code_map.size());
 
@@ -186,7 +188,7 @@ vector<int> huffman_decode(Bitstream bitstream, SymbolCodeMap code_map) {
             to_extract = bitstream.size() - pos;
 
         uint32_t bits = bitstream.extract(to_extract, pos);
-        bits = fill_rest_with_ones(bits, max_code_length);
+        bits = fillRestWithOnes(bits, max_code_length);
 
         // find matching symbol for extracted code
         // todo: binary search
