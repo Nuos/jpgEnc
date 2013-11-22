@@ -55,10 +55,6 @@ Node* generate_huff_tree(unordered_map<int, int> symbol_counts, int total) {
         Node* second = nodes.top();
         nodes.pop();
 
-        // always put the higher tree to the right
-        if (first->height() > second->height()) {
-            std::swap(first, second);
-        }
         nodes.emplace(new Node(first->probability + second->probability, first, second));
     }
 
