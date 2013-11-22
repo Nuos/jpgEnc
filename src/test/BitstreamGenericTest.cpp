@@ -59,36 +59,6 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     BOOST_CHECK(b8[4] == 0);
     BOOST_CHECK(b8[5] == 1);
 
-    // extract arbitrary number of bits (up to 32 bits)
-    b8 = Bitstream8{1,0,0,1,1,1};
-
-    auto res = b8.extractT<uint16_t>(3, 0);
-    BOOST_CHECK_EQUAL(res, 0x8000); // 10000..0
-
-    res = b8.extractT<uint16_t>(4, 2);
-    BOOST_CHECK_EQUAL(res, 0x7000); // 011100..0
-
-    b8 = Bitstream8{ 1, 0, 0, 1, 1, 1, 0, 0,    1, 0, 1 };
-
-    res = b8.extractT<uint16_t>(11, 0);
-    BOOST_CHECK_EQUAL(res, 0x9CA0); // 1001110010100..0
-
-    res = b8.extractT<uint16_t>(5, 6);
-    BOOST_CHECK_EQUAL(res, 0x2800); // 0010100..0
-
-    // extracting different types
-    auto u8 = b8.extractT<uint8_t>(4, 1);
-    BOOST_CHECK_EQUAL(u8, 0x30); // 00110000
-
-    auto u16 = b8.extractT<uint16_t>(b8.size(), 0);
-    BOOST_CHECK_EQUAL(u16, 0x9CA0); // 1001 1100 1010 0000
-
-    auto u32 = b8.extractT<uint32_t>(5, 6);
-    BOOST_CHECK_EQUAL(u32, 0x28000000); // 0010 100..0
-
-    auto u64 = b8.extractT<uint64_t>(6, 3);
-    BOOST_CHECK_EQUAL(u64, 0xE400000000000000); // 1110 0100 00..0
-
     // appending bitstreams
     auto b1 = Bitstream8{1, 0, 1, 1, 0, 0}; 
     auto b2 = Bitstream8{0, 0, 1, 1, 0, 0 };
@@ -97,18 +67,18 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
     BOOST_CHECK_EQUAL(b1.size(), 12);
     BOOST_CHECK_EQUAL(b1.extractT<uint16_t>(b1.size(), 0), 0xB0C0);
 
-    // writing / reading file
-    Bitstream bitset;
-    srand((unsigned int) time(NULL));
-
-    bool val = false;
-    for (int x = 0; x < writes; ++x) {
-        if (!(x % 4)) val = !val;
-        bitset << val; // or bitset.push_back(val)
-    }
-    BOOST_CHECK_EQUAL(bitset.size(), writes);
-
     {
+        // writing / reading file
+        Bitstream bitset;
+        srand((unsigned int)time(NULL));
+
+        bool val = false;
+        for (int x = 0; x < writes; ++x) {
+            if (!(x % 4)) val = !val;
+            bitset << val; // or bitset.push_back(val)
+        }
+        BOOST_CHECK_EQUAL(bitset.size(), writes);
+
         {
             std::ofstream bitset_out("saved_bitset", std::fstream::binary);
             bitset_out << bitset;
@@ -166,14 +136,15 @@ BOOST_AUTO_TEST_CASE(test_own_generic_bitstream)
 
     Bitstream8 bs6{ 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0 };
     BOOST_CHECK_NE(bs3, bs6);
-
 }
 
 
-BOOST_AUTO_TEST_CASE(extracting)
+BOOST_AUTO_TEST_CASE(extracting_from_bitstream64)
 {
+    using Bitstr = Bitstream64;
+
     // extract arbitrary number of bits (up to 32 bits)
-    auto b = Bitstream64{ 1, 0, 0, 1, 1, 1 };
+    auto b = Bitstr{ 1, 0, 0, 1, 1, 1 };
 
     auto res = b.extractT<uint16_t>(3, 0);
     BOOST_CHECK_EQUAL(res, 0x8000); // 10000..0
@@ -181,7 +152,43 @@ BOOST_AUTO_TEST_CASE(extracting)
     res = b.extractT<uint16_t>(4, 2);
     BOOST_CHECK_EQUAL(res, 0x7000); // 011100..0
 
-    b = Bitstream64{ 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1 };
+    b = Bitstr{ 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1 };
+
+    res = b.extractT<uint16_t>(11, 0);
+    BOOST_CHECK_EQUAL(res, 0x9CA0); // 1001110010100..0
+
+    res = b.extractT<uint16_t>(5, 6);
+    BOOST_CHECK_EQUAL(res, 0x2800); // 0010100..0
+
+
+    // extracting different types
+    auto u8 = b.extractT<uint8_t>(4, 1);
+    BOOST_CHECK_EQUAL(u8, 0x30); // 00110000
+
+    auto u16 = b.extractT<uint16_t>(b.size(), 0);
+    BOOST_CHECK_EQUAL(u16, 0x9CA0); // 1001 1100 1010 0000
+
+    auto u32 = b.extractT<uint32_t>(5, 6);
+    BOOST_CHECK_EQUAL(u32, 0x28000000); // 0010 100..0
+
+    auto u64 = b.extractT<uint64_t>(6, 3);
+    BOOST_CHECK_EQUAL(u64, 0xE400000000000000); // 1110 0100 00..0
+}
+
+BOOST_AUTO_TEST_CASE(extracting_from_bitstream8)
+{
+    using Bitstr = Bitstream8;
+
+    // extract arbitrary number of bits (up to 32 bits)
+    auto b = Bitstr{ 1, 0, 0, 1, 1, 1 };
+
+    auto res = b.extractT<uint16_t>(3, 0);
+    BOOST_CHECK_EQUAL(res, 0x8000); // 10000..0
+
+    res = b.extractT<uint16_t>(4, 2);
+    BOOST_CHECK_EQUAL(res, 0x7000); // 011100..0
+
+    b = Bitstr{ 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 1 };
 
     res = b.extractT<uint16_t>(11, 0);
     BOOST_CHECK_EQUAL(res, 0x9CA0); // 1001110010100..0
