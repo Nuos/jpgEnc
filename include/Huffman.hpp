@@ -36,24 +36,29 @@ public:
 
 // a huffman code for a symbol
 struct Code {
+    using CodeType = uint32_t;
+    static const auto max_code_length = sizeof(CodeType)* 8;
+
     Code() : code(0), length(0) {}
-    Code(uint32_t code, uint8_t length)
+    Code(CodeType code, uint8_t length)
         : code(code), length(length)
     {
+        assert(length <= max_code_length);
+
         // make the leftmost bit of the code the MSB
-        auto shift = sizeof(uint32_t)* 8 - length;
+        auto shift = max_code_length - length;
         this->code <<= shift;
     }
 
     Code(Bitstream bitstream) {
         length = bitstream.size();
-        assert(length < 64);
+        assert(length <= max_code_length);
 
         code = bitstream.extract(length, 0);
     }
 
     // like bistreams, the code begins at the msb
-    uint32_t code;
+    CodeType code;
     uint8_t length;
 };
 
@@ -63,9 +68,9 @@ using SymbolCodeMap = std::unordered_map<int, Code>;
 // takes a text, caluclates the probability of every symbol and returns a map from symbols to huffman codes
 SymbolCodeMap generateCodeMap(std::vector<int> text);
 
-Node* generateHuffTree(unordered_map<int, int> symbol_counts, int total_symbols);
+Node* generateHuffTree(unordered_map<int, int> symbol_counts, size_t total_symbols);
 // generate a list of symbols grouped by code length
-void generateSymbolsPerCodelength(Node* node, int depth, vector<vector<int>>& symbols);
+void generateSymbolsPerCodelength(Node* node, vector<vector<int>>& symbols, int depth = 0);
 SymbolCodeMap generateCodes(vector<vector<int>>& symbols);
 
 

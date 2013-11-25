@@ -50,7 +50,7 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
     // list of symbols grouped by code length
     // symbols_per_length = symbols[code_length]
     vector<vector<int>> symbols(root->height() + 1);
-    generateSymbolsPerCodelength(root, 0, symbols);
+    generateSymbolsPerCodelength(root, symbols);
 
     SymbolCodeMap code_map = generateCodes(symbols);
 
@@ -59,7 +59,8 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
 }
 
 
-Node* generateHuffTree(unordered_map<int, int> symbol_counts, int total) {
+// TODO: use frequencies instead of propabilities (int instead of doubles)
+Node* generateHuffTree(unordered_map<int, int> symbol_counts, size_t total) {
     auto comp = [](const Node* lhs, const Node* rhs) {
         return lhs->probability > rhs->probability;
     };
@@ -94,16 +95,16 @@ Node* generateHuffTree(unordered_map<int, int> symbol_counts, int total) {
 }
 
 
-void generateSymbolsPerCodelength(Node* node, int depth, vector<vector<int>>& symbols) {
+void generateSymbolsPerCodelength(Node* node, vector<vector<int>>& symbols, int depth /* = 0 */) {
     if (node->is_leaf) {
         symbols[depth].push_back(node->symbol);
     }
     else {
         if (node->left) {
-            generateSymbolsPerCodelength(node->left, depth + 1, symbols);
+            generateSymbolsPerCodelength(node->left, symbols, depth + 1);
         }
         if (node->right) {
-            generateSymbolsPerCodelength(node->right, depth + 1, symbols);
+            generateSymbolsPerCodelength(node->right, symbols, depth + 1);
         }
     }
 }
@@ -118,6 +119,7 @@ SymbolCodeMap generateCodes(vector<vector<int>>& symbols) {
     uint32_t code = 0;
     for (int length = 1; length < symbols.size(); length++) {
         for (int symbol : symbols[length]) {
+            // TODO: for speed: make a post-processing step instead of checking inside the loop
             if (code == (1 << length) - 1) {
                 // the very last code, prevent a code consisting of only 1s
                 code_map[symbol] = Code(code << 1, length+1);
