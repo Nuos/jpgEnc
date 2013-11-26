@@ -169,4 +169,55 @@ namespace Segment
     };
     static sSOF0<1> SOF0_1c; // prefilled/predefined SOF0 segment with 1 component/channel (Y, grayscale)
     static sSOF0<3> SOF0_3c; // prefilled/predefined SOF0 segment with 3 components/channels (color image)
+
+    struct sDHT
+    {
+        static const auto fixed_len = 19;
+        const Bytes<2> marker;
+        Bytes<2> len;               // Fill that! Length is without this 2-Byte length
+        const Bytes<1> HT_info;
+        Bytes<16> code_lengths;     // Fill that!
+        std::vector<Byte> symbols;
+
+        // defaults
+        sDHT()
+            : marker{ { 0xff, 0xc4 } },
+            len{ { 0, 0 } },
+            HT_info{ { 0 } },
+            code_lengths{ { 0 } },
+            symbols{ {} }
+        {}
+
+        // setter
+        sDHT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+        sDHT& setCodeData(/* _symbol_and_its_length_or_something_like_that */) {
+            // symbole sortiert nach
+            //   1. codelänge aufsteigend
+            //   2. alphabet aufsteigend
+            symbols = std::vector<Byte>{{ 0, 4, 9, 1, 7 }};
+            code_lengths[3] = 2;
+            code_lengths[2] = 3;
+
+            recalcLength();
+
+            return *this;
+        }
+        sDHT& recalcLength() {
+            assert(symbols.size() <= 256);
+            setLen(static_cast<short>(fixed_len + symbols.size()));
+            return *this;
+        }
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sDHT& DHT)
+        {
+            const auto& segment = DHT;
+            // write fixed size portion of the segment
+            out.write((const char*)&segment, fixed_len + 2);
+            // then write the varying symbols
+            out.write((const char*)&segment.symbols[0], segment.symbols.size());
+            return out;
+        }
+    };
+    static sDHT DHT; // prefilled/predefined DHT segment
 }

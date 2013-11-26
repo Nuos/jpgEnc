@@ -13,7 +13,6 @@ BOOST_AUTO_TEST_CASE(package_test) {
 }
 
 BOOST_AUTO_TEST_CASE(package_merge_test) {
-    for (auto i = 0; i < 50000; ++i) {
 
     vector<Symbol> symbols{
         Symbol(0, 6),
@@ -36,5 +35,4 @@ BOOST_AUTO_TEST_CASE(package_merge_test) {
     BOOST_CHECK_EQUAL(2, code_lengths[0]);
     BOOST_CHECK_EQUAL(2, code_lengths[4]);
     BOOST_CHECK_EQUAL(2, code_lengths[9]);
-    }
 }
