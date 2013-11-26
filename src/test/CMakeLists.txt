@@ -4,6 +4,7 @@ set(SOURCE_FILES_UNIT_TEST
     ImageTest.cpp
     BitstreamGenericTest.cpp
     HuffmanTest.cpp
+    PackageMergeTest.cpp
     )
     
 set(SOURCE_FILES_PERF_TEST

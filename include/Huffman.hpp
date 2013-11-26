@@ -5,9 +5,11 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
+#include <numeric>
 #include <queue>
 #include <iostream>
 #include <assert.h>
+#include <iterator>
 
 using std::unordered_map;
 using std::priority_queue;
@@ -90,3 +92,90 @@ struct DecodeEntry {
         return code < other.code;
     }
 };
+
+struct Symbol {
+    int symbol, frequency;
+
+    Symbol()
+        : symbol{},
+        frequency{}
+    {}
+    Symbol(int _symbol, int _freq)
+        : symbol(_symbol),
+        frequency(_freq)
+    {}
+};
+
+inline bool operator<(const Symbol& lhs, const Symbol& rhs) {
+    return lhs.symbol < rhs.symbol;
+}
+
+struct Package {
+    int weight;
+    vector<Symbol> symbols;
+
+    Package(const Symbol& _symbol) {
+        symbols.push_back(_symbol);
+        weight = _symbol.frequency;
+    }
+
+    Package(const Package& p1, const Package& p2) {
+        weight = p1.weight + p2.weight;
+        std::merge(begin(p1.symbols), end(p1.symbols),
+                   begin(p2.symbols), end(p2.symbols),
+                   back_inserter(symbols));
+    }
+};
+
+// input: list of symbols (with its frequency)
+//        maximum code length
+// output: a code length for each symbol
+inline unordered_map<int, int> package_merge(vector<Symbol> symbols, int length_limit) {
+    auto comp = [](const Package& lhs, const Package& rhs) {
+        return lhs.weight > rhs.weight;
+    };
+    using Level = priority_queue<Package, vector<Package>, decltype(comp)>;
+
+    // blueprint level
+    Level level;
+    for (const auto& sym : symbols)
+        level.push(sym);
+
+    // allocate number of levels 2^-1 up to 2^-length_limit
+    // levels[0] should be 2^-length_limit and levels[length_limit] should be 2^0
+    vector<Level> levels;
+    levels.reserve(length_limit);
+    for (auto i = 0; i < length_limit; ++i)
+        levels.push_back(level);
+    levels.push_back(Level()); // last list is empty (level 2^0 or 1)
+
+    for (auto i = 0; i < length_limit; ++i) {
+        auto& level = levels[i];
+        auto& next_level = levels[i + 1];
+
+        // package the least 2 packages if there are more than 2
+        while (level.size() > 1) {
+            auto p1 = level.top();
+            level.pop();
+            auto p2 = level.top();
+            level.pop();
+
+            // package & merge
+            next_level.push(Package{ p1, p2 });
+        }
+    }
+
+    // count the occurences of the symbols in the remaining packages
+    // the count is the code length for that symbol
+    unordered_map<int, int> code_lengths;
+    auto& final_level = levels[length_limit];
+    while (final_level.size()) {
+        const auto package = final_level.top();
+        final_level.pop();
+
+        for (const auto& sym : package.symbols)
+            code_lengths[sym.symbol]++;
+    }
+
+    return code_lengths;
+}
