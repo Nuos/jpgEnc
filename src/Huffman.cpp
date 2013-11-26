@@ -37,12 +37,7 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
 
     unordered_map<int, int> symbol_counts;
     for (auto& symbol : text) {
-        if (symbol_counts.count(symbol) == 0) {
-            symbol_counts.emplace(symbol, 1);
-        }
-        else {
-            ++symbol_counts[symbol];
-        }
+        ++symbol_counts[symbol];
     }
 
     Node* root = generateHuffTree(symbol_counts, text.size());
