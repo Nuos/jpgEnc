@@ -40,10 +40,17 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
         ++symbol_counts[symbol];
     }
 
+    // special case when we only have one type of symbol
+    if (symbol_counts.size() == 1) {
+        SymbolCodeMap code_map;
+        code_map.emplace(text[0], Code(Bitstream({ 0 })));
+        return code_map;
+    }
+
     Node* root = generateHuffTree(symbol_counts, text.size());
 
     // list of symbols grouped by code length
-    // symbols_per_length = symbols[code_length]
+    // symbols_for_length = symbols[code_length]
     vector<vector<int>> symbols(root->height() + 1);
     generateSymbolsPerCodelength(root, symbols);
 
@@ -109,19 +116,17 @@ SymbolCodeMap generateCodes(vector<vector<int>>& symbols) {
     // based on the algorithm in
     // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
 
+    // prevents a code consiting of only ones by putting that one one level deeper
+    int only_ones_symbol = symbols.back().back();
+    symbols.back().pop_back();
+    symbols.push_back({only_ones_symbol});
+
     SymbolCodeMap code_map;
 
     uint32_t code = 0;
     for (int length = 1; length < symbols.size(); length++) {
         for (int symbol : symbols[length]) {
-            // TODO: for speed: make a post-processing step instead of checking inside the loop
-            if (code == (1 << length) - 1) {
-                // the very last code, prevent a code consisting of only 1s
-                code_map[symbol] = Code(code << 1, length+1);
-            }
-            else {
-                code_map[symbol] = Code(code, length);
-            }
+            code_map[symbol] = Code(code, length);
             ++code;
         }
         code <<= 1;
