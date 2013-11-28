@@ -30,10 +30,10 @@ BOOST_AUTO_TEST_CASE(test_tree_right_growing) {
     vector<int> text{2,2,22,22, 5,5,5,5,5, 3,3,3,33,33,33, 7,7,7,7,7,7,7};
     SymbolCodeMap code_map = generateCodeMap(text);
 
-    BOOST_CHECK(equals(code_map[2],  Bitstream({ 1, 0, 0 })));
-    BOOST_CHECK(equals(code_map[22], Bitstream({ 1, 0, 1 })));
-    BOOST_CHECK(equals(code_map[3],  Bitstream({ 1, 1, 1, 0 })));
-    BOOST_CHECK(equals(code_map[33], Bitstream({ 1, 1, 0 })));
+    BOOST_CHECK(equals(code_map[22], Bitstream({ 1, 0, 0 })));
+    BOOST_CHECK(equals(code_map[2],  Bitstream({ 1, 0, 1 })));
+    BOOST_CHECK(equals(code_map[33], Bitstream({ 1, 1, 1, 0 })));
+    BOOST_CHECK(equals(code_map[3],  Bitstream({ 1, 1, 0 })));
     BOOST_CHECK(equals(code_map[5],  Bitstream({ 0, 0 })));
     BOOST_CHECK(equals(code_map[7],  Bitstream({ 0, 1 })));
     BOOST_CHECK_EQUAL(code_map.size(), 6);
