@@ -68,9 +68,10 @@ SymbolCodeMap generateCodes(vector<vector<int>>& symbols) {
     // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
 
     // prevents a code consiting of only ones by putting that one one level deeper
-    int only_ones_symbol = symbols.back().back();
-    symbols.back().pop_back();
-    symbols.push_back({only_ones_symbol});
+    // BUG: fails if vector at codelength 16 is empty
+    //int only_ones_symbol = symbols.back().back();
+    //symbols.back().pop_back();
+    //symbols.push_back({only_ones_symbol});
 
     SymbolCodeMap code_map;
 
