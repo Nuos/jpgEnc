@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(package_merge_test) {
     
     auto code_lengths = package_merge(symbols, 5);
 
-    // BOOST_CHECK_EQUAL_COLLECTIONS doesn't check content order
+    // BOOST_CHECK_EQUAL_COLLECTIONS does check content order
 
     auto length_one = vector<int>{{ 9 }};
     auto length_two = vector<int>{{ 4 }};
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(package_merge_test) {
 
     code_lengths = package_merge(symbols, 3);
 
-    length_two = vector<int>{{ 4, 0, 9 }};
+    length_two = vector<int>{{ 0, 4, 9 }};
     length_three = vector<int>{{ 1, 7 }};
     BOOST_CHECK_EQUAL_COLLECTIONS(begin(length_two),   end(length_two),   begin(code_lengths[2]), end(code_lengths[2]));
     BOOST_CHECK_EQUAL_COLLECTIONS(begin(length_three), end(length_three), begin(code_lengths[3]), end(code_lengths[3]));
