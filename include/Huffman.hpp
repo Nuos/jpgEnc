@@ -130,7 +130,7 @@ struct Package {
 // input: list of symbols (with its frequency)
 //        maximum code length
 // output: a code length for each symbol
-inline unordered_map<int, int> package_merge(vector<Symbol> symbols, int length_limit) {
+inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limit) {
     auto comp = [](const Package& lhs, const Package& rhs) {
         return lhs.weight > rhs.weight;
     };
@@ -168,14 +168,22 @@ inline unordered_map<int, int> package_merge(vector<Symbol> symbols, int length_
     // count the occurences of the symbols in the remaining packages
     // the count is the code length for that symbol
     unordered_map<int, int> code_lengths;
+    vector<vector<int>> symbolsByCodeLength(length_limit+1);
     auto& final_level = levels[length_limit];
     while (final_level.size()) {
         const auto package = final_level.top();
         final_level.pop();
 
+        int codelength = 0;
+
         for (const auto& sym : package.symbols)
             code_lengths[sym.symbol]++;
     }
 
-    return code_lengths;
+    // put it in a vector for easy usage
+    for (auto it = code_lengths.begin(); it != code_lengths.end(); ++it){
+        symbolsByCodeLength[it->second].push_back(it->first);
+    }
+
+    return symbolsByCodeLength;
 }

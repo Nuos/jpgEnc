@@ -40,6 +40,11 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
         ++symbol_counts[symbol];
     }
 
+    vector<Symbol> symbol_frequency;
+    for (auto it = symbol_counts.begin(); it != symbol_counts.end(); ++it){
+        symbol_frequency.push_back(Symbol(it->first,  it->second));
+    }
+
     // special case when we only have one type of symbol
     if (symbol_counts.size() == 1) {
         SymbolCodeMap code_map;
@@ -47,68 +52,14 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
         return code_map;
     }
 
-    Node* root = generateHuffTree(symbol_counts, text.size());
-
     // list of symbols grouped by code length
     // symbols_for_length = symbols[code_length]
-    vector<vector<int>> symbols(root->height() + 1);
-    generateSymbolsPerCodelength(root, symbols);
+    // TODO: Variable for CodeLength
+    vector<vector<int>> symbols = package_merge(symbol_frequency, 15);
 
     SymbolCodeMap code_map = generateCodes(symbols);
 
-    delete root;
     return code_map;
-}
-
-
-// TODO: use frequencies instead of propabilities (int instead of doubles)
-Node* generateHuffTree(unordered_map<int, int> symbol_counts, size_t total) {
-    auto comp = [](const Node* lhs, const Node* rhs) {
-        return lhs->probability > rhs->probability;
-    };
-    priority_queue<Node*, vector<Node*>, decltype(comp)> nodes;
-
-    // create a leaf node for every symbol
-    // also calculate it's probability from the given count and total
-    for (const auto& pair : symbol_counts) {
-        // pair.first: symbol
-        // pair.second: count
-        nodes.emplace(new Node((double)pair.second / (double)total, pair.first));
-    }
-
-    // combine the two nodes with lowest probability into a new one till only one is left
-    while (nodes.size() > 1) {
-        // least probable symbol or node
-        Node* first = nodes.top();
-        nodes.pop();
-        // second least probable symbol or node
-        Node* second = nodes.top();
-        nodes.pop();
-
-        nodes.emplace(new Node(first->probability + second->probability, first, second));
-    }
-
-    Node* root = nodes.top();
-    // handle the case where we only have a single symbol
-    if (root->is_leaf)
-        return new Node(root->probability, root, nullptr);
-    else
-        return root;
-}
-
-
-void generateSymbolsPerCodelength(Node* node, vector<vector<int>>& symbols, int depth /* = 0 */) {
-    if (node->is_leaf) {
-        symbols[depth].push_back(node->symbol);
-    }
-    else {
-        if (node->left) {
-            generateSymbolsPerCodelength(node->left, symbols, depth + 1);
-        }
-        if (node->right) {
-            generateSymbolsPerCodelength(node->right, symbols, depth + 1);
-        }
-    }
 }
 
 

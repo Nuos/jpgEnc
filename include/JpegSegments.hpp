@@ -190,7 +190,7 @@ namespace Segment
 
         // setter
         sDHT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
-        sDHT& setCodeData(/* _symbol_and_its_length_or_something_like_that */) {
+        sDHT& setCodeData(/* vector<vector<int>> symbols */) {
             // symbole sortiert nach
             //   1. codelänge aufsteigend
             //   2. alphabet aufsteigend
