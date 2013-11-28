@@ -2,12 +2,15 @@
 
 #include "Image.hpp"
 #include <ostream>
+#include <vector>
 
 //
 // JPEG stuff
 //
 namespace Segment
 {
+    using std::vector;
+
     // Byte array with constant size T
     template <int T>
     using Bytes = std::array<Byte, T>;
@@ -190,13 +193,23 @@ namespace Segment
 
         // setter
         sDHT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
-        sDHT& setCodeData(/* vector<vector<int>> symbols */) {
-            // symbole sortiert nach
-            //   1. codelänge aufsteigend
-            //   2. alphabet aufsteigend
-            symbols = std::vector<Byte>{{ 0, 4, 9, 1, 7 }};
-            code_lengths[3] = 2;
-            code_lengths[2] = 3;
+        sDHT& setCodeData(vector<vector<int>> &codelength_symbols) {
+            // codelength_symbols[0] is the symbol list with codelength 0
+            // codelength_symbols[1] is the symbol list with codelength 1
+            // ...
+            // codelength_symbols[16] is the symbol list with codelength 16 (MAX!)
+            // 
+            assert(codelength_symbols.size() == 17);
+
+            // symbols with codelength 0 shouldn't be possible and the DHT segment also starts with codelength 1
+            symbols.clear();
+            for (int i = 1; i < codelength_symbols.size(); ++i) {
+                auto& symbol_list = codelength_symbols[i];
+                std::sort(begin(symbol_list), end(symbol_list));
+
+                code_lengths[i-1] = symbol_list.size();
+                symbols.insert(end(symbols), begin(symbol_list), end(symbol_list));
+            }
 
             recalcLength();
 

@@ -168,7 +168,6 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
     // count the occurences of the symbols in the remaining packages
     // the count is the code length for that symbol
     unordered_map<int, int> code_lengths;
-    vector<vector<int>> symbolsByCodeLength(length_limit+1);
     auto& final_level = levels[length_limit];
     while (final_level.size()) {
         const auto package = final_level.top();
@@ -181,6 +180,7 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
     }
 
     // put it in a vector for easy usage
+    vector<vector<int>> symbolsByCodeLength(length_limit+1);
     for (auto it = code_lengths.begin(); it != code_lengths.end(); ++it){
         symbolsByCodeLength[it->second].push_back(it->first);
     }

@@ -519,6 +519,10 @@ void Image::writeJPEG(std::wstring file)
 
     using namespace Segment;
 
+    auto codedata = vector<vector<int>>(17);
+    codedata[2] = vector<int>{{ 0, 4, 9 }};
+    codedata[3] = vector<int>{{ 1, 7 }};
+
     jpeg << SOI
         << APP0
         << SOF0_3c
@@ -527,7 +531,7 @@ void Image::writeJPEG(std::wstring file)
             .setCompSetup({ CompSetup::Y, CompSetup::NoSubSampling, 0,
                             CompSetup::Cb, CompSetup::Half, 1,
                             CompSetup::Cr, CompSetup::Half, 2, })
-        << DHT.setCodeData()
+        << DHT.setCodeData(codedata)
         << EOI
         ;
 }
