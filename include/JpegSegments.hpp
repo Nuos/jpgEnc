@@ -178,7 +178,7 @@ namespace Segment
         static const auto fixed_len = 19;
         const Bytes<2> marker;
         Bytes<2> len;               // Fill that! Length is without this 2-Byte length
-        const Bytes<1> HT_info;
+        Bytes<1> HT_info;           // TODO: HTinfo
         Bytes<16> code_lengths;     // Fill that!
         std::vector<Byte> symbols;
 
@@ -205,7 +205,8 @@ namespace Segment
             symbols.clear();
             for (int i = 1; i < codelength_symbols.size(); ++i) {
                 auto& symbol_list = codelength_symbols[i];
-                std::sort(begin(symbol_list), end(symbol_list));
+
+                // symbol order is arbitrary, see itu-t81.pdf Page 51
 
                 code_lengths[i-1] = symbol_list.size();
                 symbols.insert(end(symbols), begin(symbol_list), end(symbol_list));

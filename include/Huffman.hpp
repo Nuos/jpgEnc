@@ -185,5 +185,7 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
         symbolsByCodeLength[it->second].push_back(it->first);
     }
 
+    // TODO: tu das 1er code verhindern zeug hierher
+
     return symbolsByCodeLength;
 }
