@@ -73,7 +73,9 @@ SymbolCodeMap generateCodeMap(std::vector<int> text);
 Node* generateHuffTree(unordered_map<int, int> symbol_counts, size_t total_symbols);
 // generate a list of symbols grouped by code length
 void generateSymbolsPerCodelength(Node* node, vector<vector<int>>& symbols, int depth = 0);
-SymbolCodeMap generateCodes(vector<vector<int>>& symbols);
+void preventOnlyOnesCode(vector<vector<int>>& symbols);
+SymbolCodeMap generateCodes(const vector<vector<int>>& symbols);
+
 
 
 // en- and decoding
@@ -184,8 +186,6 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
         // first: symbol
         symbolsByCodeLength[it->second].push_back(it->first);
     }
-
-    // TODO: tu das 1er code verhindern zeug hierher
 
     return symbolsByCodeLength;
 }

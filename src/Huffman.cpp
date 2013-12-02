@@ -54,27 +54,31 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
 
     // list of symbols grouped by code length
     // symbols_for_length = symbols[code_length]
-    // TODO: Variable for CodeLength
+    // TODO: return this list as well
     vector<vector<int>> symbols = package_merge(symbol_frequency, 15);
+    preventOnlyOnesCode(symbols);
 
     SymbolCodeMap code_map = generateCodes(symbols);
 
     return code_map;
 }
 
-
-SymbolCodeMap generateCodes(vector<vector<int>>& symbols) {
-    // based on the algorithm in
-    // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
+void preventOnlyOnesCode(vector<vector<int>>& symbols) {
+    assert(symbols.back().empty());
 
     // prevents a code consiting of only ones by putting that one one level deeper
     auto it = std::find_if(symbols.rbegin(), symbols.rend(), [](const vector<int>& x){return !x.empty(); });
     assert(it != symbols.rbegin());
+
     int only_ones_symbol = it->back();
     it->pop_back();
     --it;
     it->push_back({ only_ones_symbol });
+}
 
+SymbolCodeMap generateCodes(const vector<vector<int>>& symbols) {
+    // based on the algorithm in
+    // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
 
     SymbolCodeMap code_map;
 
