@@ -1,37 +1,5 @@
 #include "Huffman.hpp"
 
-Node::Node(double probability, Node* left, Node* right)
-    : probability(probability),
-    left(left),
-    right(right),
-    is_leaf(false)
-{}
-
-Node::Node(double probability, int symbol)
-    : probability(probability),
-    symbol(symbol),
-    is_leaf(true),
-    left(nullptr),
-    right(nullptr)
-{}
-
-Node::~Node() {
-    delete left;
-    delete right;
-}
-
-int Node::height() const {
-    if (is_leaf)
-        return 0;
-    else if (left && right)
-        return std::max(left->height(), right->height()) + 1;
-    else if (left)
-        return left->height() + 1;
-    else
-        return right->height() + 1;
-}
-
-
 SymbolCodeMap generateCodeMap(std::vector<int> text) {
     assert(text.size() > 0);
 

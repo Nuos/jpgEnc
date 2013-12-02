@@ -15,27 +15,6 @@ using std::unordered_map;
 using std::priority_queue;
 using std::vector;
 
-
-class Node {
-public:
-    Node(double probability, Node* left, Node* right);
-    Node(double probability, int symbol);
-    ~Node();
-
-    // longest path to a child
-    int height() const;
-
-public:
-    double probability;
-
-    // bit hacky for now..
-    int symbol;
-    bool is_leaf;
-
-    Node* left;
-    Node* right;
-};
-
 // a huffman code for a symbol
 struct Code {
     using CodeType = uint32_t;
@@ -70,9 +49,6 @@ using SymbolCodeMap = std::unordered_map<int, Code>;
 // takes a text, caluclates the probability of every symbol and returns a map from symbols to huffman codes
 SymbolCodeMap generateCodeMap(std::vector<int> text);
 
-Node* generateHuffTree(unordered_map<int, int> symbol_counts, size_t total_symbols);
-// generate a list of symbols grouped by code length
-void generateSymbolsPerCodelength(Node* node, vector<vector<int>>& symbols, int depth = 0);
 void preventOnlyOnesCode(vector<vector<int>>& symbols);
 SymbolCodeMap generateCodes(const vector<vector<int>>& symbols);
 
