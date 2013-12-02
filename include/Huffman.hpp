@@ -173,8 +173,6 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
         const auto package = final_level.top();
         final_level.pop();
 
-        int codelength = 0;
-
         for (const auto& sym : package.symbols)
             code_lengths[sym.symbol]++;
     }
@@ -182,6 +180,8 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
     // put it in a vector for easy usage
     vector<vector<int>> symbolsByCodeLength(length_limit+1);
     for (auto it = code_lengths.begin(); it != code_lengths.end(); ++it){
+        // second: code length
+        // first: symbol
         symbolsByCodeLength[it->second].push_back(it->first);
     }
 
