@@ -9,97 +9,13 @@
 static const auto debug = false;
 
 //
-// CHANNEL
-//
-// ctor
-Image::Channel::Channel(uint w, uint h)
-: width{ w },
-height{ h },
-w{ width },
-h{ height }
-{
-    pixels.resize(width*height);
-    if (debug) std::cout << "Channel::Channel()" << std::endl;
-}
-
-// copy ctor
-Image::Channel::Channel(const Channel& other)
-: pixels(other.pixels),
-width(other.width), height(other.height),
-w{ width },
-h{ height }
-{
-    if (debug) std::cout << "Channel::Channel(Channel&)" << std::endl;
-}
-
-// move ctor
-Image::Channel::Channel(Channel&& other)
-: pixels(std::move(other.pixels)),
-width(other.width), height(other.height),
-w{ width },
-h{ height }
-{
-    if (debug) std::cout << "Channel::Channel(Channel&&)" << std::endl;
-}
-
-// ASSIGNMENT
-// copy assignment
-Image::Channel& Image::Channel::operator=(const Channel &other)
-{
-    if (this != &other) {
-        pixels = other.pixels;
-        width = other.width;
-        height = other.height;
-        if (debug) std::cout << "Channel::operator=(Channel&)" << std::endl;
-    }
-    return *this;
-}
-
-// move assignment
-Image::Channel& Image::Channel::operator=(Channel &&other)
-{
-    if (this != &other) {
-        pixels = std::move(other.pixels);
-        width = other.width;
-        height = other.height;
-        if (debug) std::cout << "Channel::operator=(Channel&&)" << std::endl;
-    }
-    return *this;
-}
-
-// INDEXING
-// for one-dimensional indexing
-Byte& Image::Channel::operator()(uint x)
-{
-    return pixels[x];
-}
-
-// for two-dimensional indexing
-// stops at pixel border, so no out-of-bounds indexing possible
-// practically duplicates pixel at the border 
-Byte& Image::Channel::operator()(uint x, uint y)
-{
-    x = std::min(x, width - 1);
-    y = std::min(y, height - 1);
-
-    return pixels[y * width + x];
-}
-
-void Image::Channel::resize(uint _width, uint _height)
-{
-    width = _width;
-    height = _height;
-    pixels.resize(width*height);
-}
-
-//
 // CONSTRUCTORS
 //
 // ctor
 Image::Image(uint w, uint h, ColorSpace color)
     : color_space_type(color),
     width(w), height(h),
-    one(w, h), two(w, h), three(w, h),
+    one(h, w), two(h, w), three(h, w),
     Y(one), Cb(two), Cr(three),
     R(one), G(two), B(three)
 {
@@ -188,13 +104,13 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                 static const float Cr[] {  .5f,    -.4186f, -.0813f };
 
                 for (uint x = 0; x < num_pixel; ++x) {
-                    auto& r = R(x);
-                    auto& g = G(x);
-                    auto& b = B(x);
+                    auto& r = R.data()[x];
+                    auto& g = G.data()[x];
+                    auto& b = B.data()[x];
 
-                    converted. Y(x)  = static_cast<Byte>((Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b)	+ 0.5f));
-                    converted.Cb(x) = static_cast<Byte>((Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b)	+ 0.5f));
-                    converted.Cr(x) = static_cast<Byte>((Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b)	+ 0.5f));
+                    converted.Y.data()[x]        = (Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b));
+                    converted.Cb.data()[x]        = (Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b));
+                    converted.Cr.data()[x]        = (Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b));
                 }
             }
             break;
@@ -214,13 +130,13 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                 static const float b[] {  1.f, 1.772f,   .0f };
 
                 for (uint x = 0; x < num_pixel; ++x) {
-                    auto y  =  Y(x) - Flat[0];
-                    auto cb = Cb(x) - Flat[1];
-                    auto cr = Cr(x) - Flat[2];
+                    auto y  =  Y.data()[x] - Flat[0];
+                    auto cb = Cb.data()[x] - Flat[1];
+                    auto cr = Cr.data()[x] - Flat[2];
 
-                    converted. Y(x)  = static_cast<Byte>((r[0] * y + r[1] * cb + r[2] * cr)	+ 0.5f);
-                    converted.Cb(x) = static_cast<Byte>((g[0] * y + g[1] * cb + g[2] * cr)	+ 0.5f);
-                    converted.Cr(x) = static_cast<Byte>((b[0] * y + b[1] * cb + b[2] * cr)	+ 0.5f);
+                    converted.Y.data()[x] = (r[0] * y + r[1] * cb + r[2] * cr);
+                    converted.Cb.data()[x] = (g[0] * y + g[1] * cb + g[2] * cr);
+                    converted.Cr.data()[x] = (b[0] * y + b[1] * cb + b[2] * cr);
                 }
             }
             break;
@@ -245,26 +161,28 @@ struct Image::Mask
     uint rowsize() const { return static_cast<uint>(row.size()); }
 };
 
-void Image::subsample(Channel& chan, int hor_res_div, int vert_res_div, Mask& mat, bool averaging, SubsamplingMode mode)
+void Image::subsample(matrix<PixelDataType>& chan, int hor_res_div, int vert_res_div, Mask& mat, bool averaging, SubsamplingMode mode)
 {
-    Channel new_chan(chan.w / hor_res_div, chan.h / vert_res_div);
+    matrix<PixelDataType> new_chan(chan.size1() / vert_res_div, chan.size2() / hor_res_div);
 
-    // subsample Cr channel
+    // subsample Cr matrix<PixelDataType>
+    // size1() = rows
+    // size2() = columns
     auto pixidx = 0U;
-    for (auto y = 0U; y < chan.h; y += 2) {
-        for (auto x = 0U; x < chan.w; x += mat.rowsize()) {
-            auto pix_val = 0;
+    for (auto y = 0U; y < chan.size1(); y += 2) {
+        for (auto x = 0U; x < chan.size2(); x += mat.rowsize()) {
+            PixelDataType pix_val = 0;
             for (auto m = 0U; m < mat.rowsize(); ++m) {
                 pix_val += mat.row[m] * chan(x + m, y);
             }
-            new_chan(pixidx++) = pix_val;
+            new_chan.data()[pixidx++] = pix_val;
         }
 
         if (!mat.scanline_jump) {
             // go through next scanline and average the pixels
             if (averaging) {
-                for (auto x = 0U; x < chan.w; x += mat.rowsize()) {
-                    auto pix_val = 0;
+                for (auto x = 0U; x < chan.size2(); x += mat.rowsize()) {
+                    PixelDataType pix_val = 0;
                     for (auto m = 0U; m < mat.rowsize(); ++m) {
                         pix_val += mat.row[m] * chan(x + m, y + 1);
                     }
@@ -354,10 +272,10 @@ void Image::applySubsampling(SubsamplingMode mode)
             break;
     }
 
-    // subsampling Cr channel
+    // subsampling Cr matrix<PixelDataType>
     subsample(Cr, hor_res_div, vert_res_div, mat, averaging, mode);
 
-    // subsample Cb channel
+    // subsample Cb matrix<PixelDataType>
     subsample(Cb, hor_res_div, vert_res_div, mat, averaging, mode);
 }
 
@@ -440,13 +358,13 @@ void loadP3PPM(PPMFileBuffer& file, Image& img) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
         file.read_word(buf);
-        img.R(x) = fast_atoi(buf.c_str());
+        img.R.data()[x] = fast_atoi(buf.c_str());
 
         file.read_word(buf);
-        img.G(x) = fast_atoi(buf.c_str());
+        img.G.data()[x] = fast_atoi(buf.c_str());
 
         file.read_word(buf);
-        img.B(x) = fast_atoi(buf.c_str());
+        img.B.data()[x] = fast_atoi(buf.c_str());
     }
 }
 
@@ -454,9 +372,9 @@ void loadP3PPM(PPMFileBuffer& file, Image& img) {
 void loadP6PPM(PPMFileBuffer& ppm, Image& img) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
-        img.R(x) = ppm.read_byte();
-        img.G(x) = ppm.read_byte();
-        img.B(x) = ppm.read_byte();
+        img.R.data()[x] = ppm.read_byte();
+        img.G.data()[x] = ppm.read_byte();
+        img.B.data()[x] = ppm.read_byte();
     }
 }
 
@@ -508,6 +426,18 @@ Image loadPPM(std::string path) {
         loadP3PPM(ppm, img);
     else if (magic == "P6") {
         loadP6PPM(ppm, img);
+    }
+
+    //adjust size of our image for using 8x8 blocks
+
+    if (width % 8 != 0)
+    {
+        
+    }
+
+    if (height % 8 != 0)
+    {
+
     }
 
     return img;

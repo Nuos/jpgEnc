@@ -11,8 +11,11 @@
 #include <iostream>
 #include <array>
 
+#include <boost/numeric/ublas/matrix.hpp>
+
 typedef unsigned int uint;
 typedef uint8_t Byte;
+using boost::numeric::ublas::matrix;
 
 class Image;
 
@@ -22,36 +25,10 @@ Image loadPPM(std::string path);
 // fast version of atoi. No error checking, nothing.
 int fast_atoi(const char * str);
 
-// image class handling three channels (RGB, YUV, whatever) with one byte pixels
+// image class handling three matrix<PixelDataType>s (RGB, YUV, whatever) with one byte pixels
 class Image
 {
-    // NESTED CHANNEL TYPE
-private:
-    struct Channel
-    {
-        Channel(uint w, uint h); // ctor
-        Channel(const Channel& other); // copy ctor
-        Channel(Channel&& other); // move ctor
-
-        Channel& operator=(const Channel &other); // assignment
-        Channel& operator=(Channel &&other); // move assignment
-
-        // for one-dimensional indexing
-        Byte& operator()(uint x);
-
-        // for two-dimensional indexing
-        // stops at pixel border, so no out-of-bounds indexing possible
-        // practically duplicates pixel at the border 
-        Byte& operator()(uint x, uint y);
-
-        void resize(uint width, uint height);
-
-        const uint &w, &h;
-
-    private:
-        uint width, height;
-        std::vector<Byte> pixels;
-    };
+	typedef double PixelDataType; 
 
     // NESTED ENUMS
 public:
@@ -88,7 +65,7 @@ public:
     // returns a new image object, this object won't be modified
     Image convertToColorSpace(ColorSpace target_space) const;
 
-    // apply subsampling to the color channels (Cb, Cr)
+    // apply subsampling to the color matrix<PixelDataType>s (Cb, Cr)
     void applySubsampling(SubsamplingMode mode);
 
     // JPEG SEGMENTS
@@ -97,16 +74,16 @@ public:
     // HELPER
 private:
     struct Mask;
-    void subsample(Channel&, int, int, Mask&, bool, SubsamplingMode);
+    void subsample(matrix<PixelDataType>&, int, int, Mask&, bool, SubsamplingMode);
 
     // ACCESSORS
 public:
     uint width, height;
-    Channel &R, &G, &B;
-    Channel &Y, &Cb, &Cr;
+    matrix<PixelDataType> &R, &G, &B;
+    matrix<PixelDataType> &Y, &Cb, &Cr;
 
     // HIDDEN MEMBERS
 private:
     ColorSpace color_space_type;
-    Channel one, two, three;
+    matrix<PixelDataType> one, two, three;
 };
