@@ -109,6 +109,8 @@ struct Package {
 //        maximum code length
 // output: a code length for each symbol
 inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limit) {
+    assert(symbols.size() <= pow(2, length_limit));
+
     auto comp = [](const Package& lhs, const Package& rhs) {
         return lhs.weight > rhs.weight;
     };
