@@ -7,6 +7,7 @@
 
 #include "BitstreamGeneric.hpp"
 #include "Image.hpp"
+#include "Dct.hpp"
 
 using namespace std::chrono;
 
@@ -92,6 +93,43 @@ void test_jpeg_segment_writing()
     timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
 }
 
+void test_dct_arai() {
+    PRINT_TEST_NAME;
+    
+    matrix<PixelDataType> m(8, 8);
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            m(y, x) = (x + 8 * y) % 256;
+        }
+    }
+    matrix<PixelDataType> dct;
+    
+#if _DEBUG
+    const int count = 1e5;
+#else
+    const int count = 1e7;
+#endif
+
+    // first version
+    auto start = high_resolution_clock::now();
+    for (int i = 0; i < count; i++) {
+        dct = dctArai2(m);
+    }
+    auto end = high_resolution_clock::now();
+    std::cout << count << " 8x8 DCT with arai2: " << duration_cast<milliseconds>(end - start).count() << "ms";
+    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
+
+
+    // second version
+    start = high_resolution_clock::now();
+    for (int i = 0; i < count; i++) {
+        dct = dctArai(m);
+    }
+    end = high_resolution_clock::now();
+    std::cout << count << " 8x8 DCT with arai: " << duration_cast<milliseconds>(end - start).count() << "ms";
+    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
+}
+
 int main()
 {
     test_bitstream<boost::dynamic_bitset<>>();
@@ -100,6 +138,8 @@ int main()
 
     test_ppm_loading();
     test_jpeg_segment_writing();
+
+    test_dct_arai();
 
     return 0;
 }

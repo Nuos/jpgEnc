@@ -15,6 +15,8 @@
 
 typedef unsigned int uint;
 typedef uint8_t Byte;
+typedef double PixelDataType;
+
 using boost::numeric::ublas::matrix;
 
 class Image;
@@ -28,8 +30,6 @@ int fast_atoi(const char * str);
 // image class handling three matrix<PixelDataType>s (RGB, YUV, whatever) with one byte pixels
 class Image
 {
-	typedef double PixelDataType; 
-
     // NESTED ENUMS
 public:
     enum ColorSpace
