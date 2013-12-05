@@ -186,7 +186,7 @@ void Image::subsample(matrix<PixelDataType>& chan, int hor_res_div, int vert_res
                     for (auto m = 0U; m < mat.rowsize(); ++m) {
                         pix_val += mat.row[m] * chan(x + m, y + 1);
                     }
-                    (new_chan(x, y) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                    (new_chan(y, x) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
                 }
             }
             // go through next scanline
@@ -429,16 +429,51 @@ Image loadPPM(std::string path) {
     }
 
     //adjust size of our image for using 8x8 blocks
-
-    if (width % 8 != 0)
+    if (width % 8 != 0 || height % 8 != 0)
     {
-        
+        img.width = (width + 8) - (width % 8);
+        img.height  = (height + 8) - (height % 8);
+
+        img.R.resize(img.height, img.width, true);
+        img.G.resize(img.height, img.width, true);
+        img.B.resize(img.height, img.width, true);
+
+        // Fill the new Pixel with data from the border. 
+        // Right
+        for (auto y = 0U; y < height; ++y)
+        {
+            for (auto x = width; x < img.width; ++x)
+            {
+                img.R(y, x) = img.R(y, width - 1);
+                img.G(y, x) = img.G(y, width - 1);
+                img.B(y, x) = img.B(y, width - 1);
+            }
+        }
+
+        // Bottom
+        for (auto y = height; y < img.height; ++y)
+        {
+            for (auto x = 0U; x < width; ++x)
+            {
+                img.R(y, x) = img.R(height - 1, x);
+                img.G(y, x) = img.G(height - 1, x);
+                img.B(y, x) = img.B(height - 1, x);
+            }
+        }
+
+        // Corner
+        for (auto y = height; y < img.height; ++y)
+        {
+            for (auto x = width; x < img.width; ++x)
+            {
+                img.R(y, x) = img.R(height - 1, width - 1);
+                img.G(y, x) = img.G(height - 1, width - 1);
+                img.B(y, x) = img.B(height - 1, width - 1);
+            }
+        }
+
     }
 
-    if (height % 8 != 0)
-    {
-
-    }
 
     return img;
 }

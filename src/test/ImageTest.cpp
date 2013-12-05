@@ -28,28 +28,28 @@ BOOST_AUTO_TEST_CASE(test_add) {
 
 BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
-    BOOST_CHECK(image.R(100, 0) == 15);
-    BOOST_CHECK(image.G(100, 0) == 0);
-    BOOST_CHECK(image.B(100, 0) == 15);
+    BOOST_CHECK(image.R(3, 0) == 15);
+    BOOST_CHECK(image.G(3, 0) == 0);
+    BOOST_CHECK(image.B(3, 0) == 15);
 
     BOOST_CHECK(image.R(1, 1) == 0);
     BOOST_CHECK(image.G(1, 1) == 15);
     BOOST_CHECK(image.B(1, 1) == 7);
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 133);
-    BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
+    BOOST_CHECK(YCbCr_image.Y(0, 3) == 6);
+    BOOST_CHECK(YCbCr_image.Cb(0, 3) == 133);
+    BOOST_CHECK(YCbCr_image.Cr(0, 3) == 134);
 
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y(3, 0) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(3, 0) == 133);
-    BOOST_CHECK(YCbCr_image.Cr(3, 0) == 134);
+    BOOST_CHECK(YCbCr_image.Y(0, 3) == 6);
+    BOOST_CHECK(YCbCr_image.Cb(0, 3) == 133);
+    BOOST_CHECK(YCbCr_image.Cr(0, 3) == 134);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
-    BOOST_CHECK(rgb_image.R(3, 0) == 15);
-    BOOST_CHECK(rgb_image.G(3, 0) == 0);
-    BOOST_CHECK(rgb_image.B(3, 0) == 15);
+    BOOST_CHECK(rgb_image.R(0, 3) == 15);
+    BOOST_CHECK(rgb_image.G(0, 3) == 0);
+    BOOST_CHECK(rgb_image.B(0, 3) == 15);
 }
 
 BOOST_AUTO_TEST_CASE(image_subsampling_test)
