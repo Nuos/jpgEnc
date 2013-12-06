@@ -3,6 +3,8 @@
 #include <boost/numeric/ublas/io.hpp>
 #include "Dct.hpp"
 
+#define CHECK_CLOSE(left, right) BOOST_CHECK(abs(left - right) < .00001)
+
 template<typename T>
 void CHECK_EQUAL(const matrix<T>& m, const matrix<T>& n) {
     bool size_equal = m.size1() == n.size1() && m.size2() == n.size2();
@@ -13,7 +15,7 @@ void CHECK_EQUAL(const matrix<T>& m, const matrix<T>& n) {
 
     for (size_t i = 0; i < m.size1(); ++i) {
         for (size_t j = 0; j < m.size2(); ++j) {
-            BOOST_CHECK_CLOSE(m(i, j), n(i, j), 0.0001);
+            CHECK_CLOSE(m(i, j), n(i, j));
         }
     }
 }
@@ -44,23 +46,37 @@ BOOST_AUTO_TEST_CASE(arai) {
     BOOST_CHECK_EQUAL(m(2, 3), 20);
 
     auto true_dct = mat({
-        260, -18.2216411837961, 7.69085915161152e-15, -1.90481782616726, 0, -0.568239222367164, 1.85673764701218e-14, -0.143407824981022,
-        -145.773129470369, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        -15.2385426093380, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        -4.54591377893732, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0,
-        -1.14726259984816, 0, 0, 0, 0, 0, 0, 0
+        260,               -18.2216411837961, 7.69085915161152e-15, -1.90481782616726, 0, -0.568239222367164, 1.85673764701218e-14, -0.143407824981022,
+        -145.773129470369, 0,                 0, 0, 0, 0, 0, 0,
+        0,                 0,                 0, 0, 0, 0, 0, 0,
+        -15.2385426093380, 0,                 0, 0, 0, 0, 0, 0,
+        0,                 0,                 0, 0, 0, 0, 0, 0,
+        -4.54591377893732, 0,                 0, 0, 0, 0, 0, 0,
+        0,                 0,                 0, 0, 0, 0, 0, 0,
+        -1.14726259984816, 0,                 0, 0, 0, 0, 0, 0
     });
 
     auto dct = dctArai(m);
     auto dct2 = dctArai2(m);
     auto dct3 = dctDirect(m);
+    auto dct_matrix = dctMat(m);
 
-    std::cout << dct3 << std::endl;
+    auto printMat = [](const matrix<PixelDataType> &mat) {
+        for (auto i = 0u; i < mat.size1(); ++i) {
+            for (auto j = 0u; j < mat.size2(); ++j) {
+                printf("%6.3f,", mat(i, j));
+            }
+            printf("\n");
+        }
+        printf("\n");
+    };
 
-    //CHECK_EQUAL(dct, true_dct);
-    //CHECK_EQUAL(dct2, true_dct);
+    //printMat(dct);
+    //printMat(dct3);
+    //printMat(dct_matrix);
+
+    CHECK_EQUAL(dct, true_dct);
+    CHECK_EQUAL(dct2, true_dct);
     CHECK_EQUAL(dct3, true_dct);
+    CHECK_EQUAL(dct_matrix, true_dct);
 }

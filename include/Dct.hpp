@@ -3,11 +3,13 @@
 #include <cassert>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 #include "Image.hpp"
 
 using boost::numeric::ublas::matrix;
 using boost::numeric::ublas::trans;
+using boost::numeric::ublas::prod;
 using boost::math::constants::pi;
 using boost::math::constants::root_two;
 using std::cos;
@@ -277,4 +279,34 @@ matrix<PixelDataType> dctDirect(matrix<PixelDataType> X)
 
     return Y;
 
+}
+
+matrix<PixelDataType> dctMat(matrix<PixelDataType> X) 
+{
+    const auto blocksize = 8U;
+    assert(X.size1() == blocksize && X.size2() == blocksize);
+
+    auto C = [](unsigned int row) -> PixelDataType { return row == 0 ? 1./root_two<PixelDataType>() : 1.; };
+    const auto N = blocksize;
+
+    auto scale = sqrt(2./N);
+
+    // Output Matrix
+    matrix<PixelDataType> A(blocksize, blocksize);
+    for (auto k = 0U; k < blocksize; ++k) {
+        for (auto n = 0U; n < blocksize; ++n) {
+            auto co = C(k);
+            auto cos_term = (2.*n + 1.) * ((k * pi<PixelDataType>()) / (2.*N));
+            auto cos_val = cos(cos_term);
+            A(k, n) = co * scale * cos_val;
+        }
+    }
+
+    auto A_transpose = trans(A);
+
+    // axpy_prod(A, B, C, false); // C += A * B
+    matrix<PixelDataType> first = prod(A, X);
+    matrix<PixelDataType> res = prod(first, A_transpose);
+
+    return res;
 }
