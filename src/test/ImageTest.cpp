@@ -6,6 +6,8 @@
 
 int add(int i, int j) { return i+j; }
 
+#define CHECK_CLOSE(left, right) BOOST_CHECK_CLOSE(left, right, 0.1)
+
 BOOST_AUTO_TEST_CASE(test_add) {
     // seven ways to detect and report the same error:
     BOOST_CHECK(add(2, 2) == 4);        // #1 continues on error
@@ -26,30 +28,72 @@ BOOST_AUTO_TEST_CASE(test_add) {
     BOOST_CHECK_EQUAL(add(2, 2), 4);	  // #7 continues on error
 }
 
+BOOST_AUTO_TEST_CASE(image_loading_test) {
+    auto image = loadPPM("res/tester_p3.ppm");
+    BOOST_CHECK(image.R(0, 0) == 0);
+    BOOST_CHECK(image.G(0, 0) == 0);
+    BOOST_CHECK(image.B(0, 0) == 0);
+
+    BOOST_CHECK(image.R(0, 3) == 15);
+    BOOST_CHECK(image.G(0, 3) == 0);
+    BOOST_CHECK(image.B(0, 3) == 15);
+
+    BOOST_CHECK(image.R(2, 2) == 0);
+    BOOST_CHECK(image.G(2, 2) == 15);
+    BOOST_CHECK(image.B(2, 2) == 7);
+
+    BOOST_CHECK(image.R(0, 0) == 0);
+    BOOST_CHECK(image.G(0, 0) == 0);
+    BOOST_CHECK(image.B(0, 0) == 0);
+
+    // out of bounds indexing
+    BOOST_CHECK(image.R(7, 0) == 15);
+    BOOST_CHECK(image.G(7, 0) == 0);
+    BOOST_CHECK(image.B(7, 0) == 15);
+
+    BOOST_CHECK(image.R(0, 7) == 15);
+    BOOST_CHECK(image.G(0, 7) == 0);
+    BOOST_CHECK(image.B(0, 7) == 15);
+
+    BOOST_CHECK(image.R(1, 7) == 0);
+    BOOST_CHECK(image.G(1, 7) == 0);
+    BOOST_CHECK(image.B(1, 7) == 0);
+
+    BOOST_CHECK(image.R(7, 1) == 0);
+    BOOST_CHECK(image.G(7, 1) == 0);
+    BOOST_CHECK(image.B(7, 1) == 0);
+
+    BOOST_CHECK(image.R(7, 7) == 0);
+    BOOST_CHECK(image.G(7, 7) == 0);
+    BOOST_CHECK(image.B(7, 7) == 0);
+}
+
 BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
-    BOOST_CHECK(image.R(3, 0) == 15);
-    BOOST_CHECK(image.G(3, 0) == 0);
-    BOOST_CHECK(image.B(3, 0) == 15);
-
-    BOOST_CHECK(image.R(1, 1) == 0);
-    BOOST_CHECK(image.G(1, 1) == 15);
-    BOOST_CHECK(image.B(1, 1) == 7);
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y(0, 3) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(0, 3) == 133);
-    BOOST_CHECK(YCbCr_image.Cr(0, 3) == 134);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.1949);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
 
+    CHECK_CLOSE(YCbCr_image. Y(1, 1), 9.6030);
+    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.5319);
+    CHECK_CLOSE(YCbCr_image.Cr(1, 1), 121.1519);
+
+    // converting from YCbCr to YCbCr doesn't do a thing!
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    BOOST_CHECK(YCbCr_image.Y(0, 3) == 6);
-    BOOST_CHECK(YCbCr_image.Cb(0, 3) == 133);
-    BOOST_CHECK(YCbCr_image.Cr(0, 3) == 134);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.1949);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
-    BOOST_CHECK(rgb_image.R(0, 3) == 15);
-    BOOST_CHECK(rgb_image.G(0, 3) == 0);
-    BOOST_CHECK(rgb_image.B(0, 3) == 15);
+    CHECK_CLOSE(rgb_image.R(0, 3), 15);
+    CHECK_CLOSE(rgb_image.G(0, 3), 0);
+    CHECK_CLOSE(rgb_image.B(0, 3), 15);
+
+    CHECK_CLOSE(rgb_image.R(1, 1), 0);
+    CHECK_CLOSE(rgb_image.G(1, 1), 15);
+    CHECK_CLOSE(rgb_image.B(1, 1), 7);
 }
 
 BOOST_AUTO_TEST_CASE(image_subsampling_test)
