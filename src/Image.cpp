@@ -169,11 +169,12 @@ void Image::subsample(matrix<PixelDataType>& chan, int hor_res_div, int vert_res
     // size1() = rows
     // size2() = columns
     auto pixidx = 0U;
+    auto pixidx2 = 0U;
     for (auto y = 0U; y < chan.size1(); y += 2) {
         for (auto x = 0U; x < chan.size2(); x += mat.rowsize()) {
             PixelDataType pix_val = 0;
             for (auto m = 0U; m < mat.rowsize(); ++m) {
-                pix_val += mat.row[m] * chan(x + m, y);
+                pix_val += mat.row[m] * chan(y, x+m);
             }
             new_chan.data()[pixidx++] = pix_val;
         }
@@ -184,15 +185,16 @@ void Image::subsample(matrix<PixelDataType>& chan, int hor_res_div, int vert_res
                 for (auto x = 0U; x < chan.size2(); x += mat.rowsize()) {
                     PixelDataType pix_val = 0;
                     for (auto m = 0U; m < mat.rowsize(); ++m) {
-                        pix_val += mat.row[m] * chan(x + m, y + 1);
+                        pix_val += mat.row[m] * chan(y + 1, x + m);
                     }
-                    (new_chan(y, x) += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
+                    (new_chan.data()[pixidx2++] += (pix_val)) /= ((mode == S420_m) ? 4 : 2);
                 }
             }
             // go through next scanline
             else
                 --y;
         }
+
     }
 
     std::swap(chan, new_chan);

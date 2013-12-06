@@ -59,113 +59,113 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S444);
-        BOOST_CHECK_EQUAL(image.B.size2(), 4);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 8);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S422);
-        BOOST_CHECK_EQUAL(image.B.size2(), 2);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 4);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
 
         // B channel:
         // 0 0 
         // 0 0
         // 0 7
         // 15 0
-        BOOST_CHECK_EQUAL(image.B(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.B(1, 2), 7);
-        BOOST_CHECK_EQUAL(image.B(0, 3), 15);
-        BOOST_CHECK_EQUAL(image.B(1, 3), 0);
+        BOOST_CHECK_EQUAL(image.B(2, 0), 0);
+        BOOST_CHECK_EQUAL(image.B(2, 1), 7);
+        BOOST_CHECK_EQUAL(image.B(3, 0), 15);
+        BOOST_CHECK_EQUAL(image.B(3, 1), 0);
 
         // G channel:
         // 0 0 
         // 0 0
         // 0 15
         // 0 0
-        BOOST_CHECK_EQUAL(image.G(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.G(1, 2), 15);
-        BOOST_CHECK_EQUAL(image.G(0, 3), 0);
+        BOOST_CHECK_EQUAL(image.G(2, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(2, 1), 15);
+        BOOST_CHECK_EQUAL(image.G(3, 0), 0);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S411);
-        BOOST_CHECK_EQUAL(image.B.size2(), 1);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 2);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
 
         // B channel:
         // 0
         // 0
         // 0
         // 15
-        BOOST_CHECK_EQUAL(image.B(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.B(0, 3), 15);
+        BOOST_CHECK_EQUAL(image.B(2, 0), 0);
+        BOOST_CHECK_EQUAL(image.B(3, 0), 15);
 
         // G channel:
         // 0
         // 0
         // 0
         // 0
-        BOOST_CHECK_EQUAL(image.G(0, 2), 0);
-        BOOST_CHECK_EQUAL(image.G(0, 3), 0);
+        BOOST_CHECK_EQUAL(image.G(2, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(3, 0), 0);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420);
-        BOOST_CHECK_EQUAL(image.B.size2(), 2);
-        BOOST_CHECK_EQUAL(image.B.size1(), 2);
+        BOOST_CHECK_EQUAL(image.B.size2(), 4);
+        BOOST_CHECK_EQUAL(image.B.size1(), 4);
         
         // B channel:
         // 0 0
         // 0 7
-        BOOST_CHECK_EQUAL(image.B(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 0);
         BOOST_CHECK_EQUAL(image.B(1, 1), 7);
 
         // G channel:
         // 0 0
         // 0 15
-        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.G(1, 0), 0);
         BOOST_CHECK_EQUAL(image.G(1, 1), 15);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_m);
-        BOOST_CHECK_EQUAL(image.B.size2(), 2);
-        BOOST_CHECK_EQUAL(image.B.size1(), 2);
+        BOOST_CHECK_EQUAL(image.B.size2(), 4);
+        BOOST_CHECK_EQUAL(image.B.size1(), 4);
         
         // B channel:
         // 1 3
         // 3 1
         BOOST_CHECK_EQUAL(image.B(0, 0), 1);
-        BOOST_CHECK_EQUAL(image.B(0, 1), 3);
         BOOST_CHECK_EQUAL(image.B(1, 0), 3);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 3);
         BOOST_CHECK_EQUAL(image.B(1, 1), 1);
 
         // G channel:
         // 3 0
         // 0 3
         BOOST_CHECK_EQUAL(image.G(0, 0), 3);
-        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
         BOOST_CHECK_EQUAL(image.G(1, 0), 0);
+        BOOST_CHECK_EQUAL(image.G(0, 1), 0);
         BOOST_CHECK_EQUAL(image.G(1, 1), 3);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_lm);
-        BOOST_CHECK_EQUAL(image.B.size2(), 2);
-        BOOST_CHECK_EQUAL(image.B.size1(), 2);
+        BOOST_CHECK_EQUAL(image.B.size2(), 4);
+        BOOST_CHECK_EQUAL(image.B.size1(), 4);
         
         // B channel:
         // 0 0
         // 7 3
         BOOST_CHECK_EQUAL(image.B(0, 0), 0);
-        BOOST_CHECK_EQUAL(image.B(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.B(0, 1), 7);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 0);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 7);
         BOOST_CHECK_EQUAL(image.B(1, 1), 3);
 
         // G channel:
