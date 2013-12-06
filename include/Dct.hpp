@@ -228,3 +228,53 @@ matrix<PixelDataType> dctArai2(matrix<PixelDataType> x) {
     }
     return y;
 }
+
+matrix<PixelDataType> dctDirect(matrix<PixelDataType> X) 
+{
+    assert(X.size1() == 8 && X.size2() == 8);
+
+    // Output Matrix
+    matrix<PixelDataType> Y(8, 8);
+
+    // Constants C to get a orthonormal system
+    // C(n) = 0 -> 1 / (root_two) otherwise 1 
+    PixelDataType C_i;
+    PixelDataType C_j;
+
+    // Size of blocks 8x8
+    PixelDataType N = 8.0;
+
+    for (uint i = 0; i < N; ++i)
+    {
+        if (i != 0)
+            C_i = 1.0;
+        else
+            C_i = 1.0 / (root_two<PixelDataType>());
+
+        for (uint j = 0; j < N; ++j)
+        {
+            if (j != 0)
+                C_j = 1.0;
+            else
+                C_j = 1.0 / (root_two<PixelDataType>());
+
+            PixelDataType Sum = 0.0;
+
+            // Calc the Sum
+            for (uint x = 0; x < N; ++x)
+            {
+                for (uint y = 0; y < N; ++y)
+                {
+                    Sum += X(y, x) * cos(((2.0 * x + 1.0)* i * _pi) / (2.0 * N)) * cos(((2.0 * y + 1.0)* j * _pi) / (2.0 * N));
+                }
+            }
+
+            Y(j, i) = (2.0 / N) * C_i * C_j * Sum;
+
+        }
+
+    }
+
+    return Y;
+
+}

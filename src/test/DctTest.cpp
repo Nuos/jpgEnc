@@ -56,9 +56,11 @@ BOOST_AUTO_TEST_CASE(arai) {
 
     auto dct = dctArai(m);
     auto dct2 = dctArai2(m);
+    auto dct3 = dctDirect(m);
 
-    std::cout << dct2 << std::endl;
+    std::cout << dct3 << std::endl;
 
-    CHECK_EQUAL(dct, true_dct);
-    CHECK_EQUAL(dct2, true_dct);
+    //CHECK_EQUAL(dct, true_dct);
+    //CHECK_EQUAL(dct2, true_dct);
+    CHECK_EQUAL(dct3, true_dct);
 }
