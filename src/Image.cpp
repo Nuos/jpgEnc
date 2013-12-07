@@ -4,7 +4,16 @@
 #include <streambuf>
 #include <sstream>
 
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
 #include "JpegSegments.hpp"
+#include "Dct.hpp"
+
+using boost::numeric::ublas::matrix_range;
+using boost::numeric::ublas::range;
+using boost::numeric::ublas::zero_matrix;
 
 static const auto debug = false;
 
@@ -478,6 +487,47 @@ Image loadPPM(std::string path) {
 
 
     return img;
+}
+
+void Image::applyDCT(DCTMode mode) 
+{
+    auto printMat = [](const matrix<PixelDataType> &mat) {
+        for (auto i = 0u; i < mat.size1(); ++i) {
+            for (auto j = 0u; j < mat.size2(); ++j) {
+                printf("%7.3f,", mat(i, j));
+            }
+            printf("\n");
+        }
+        printf("\n");
+    };
+
+    //printMat(Cb);
+    DctCb = zero_matrix<PixelDataType>(Cb.size1(), Cb.size2());
+
+    //printf("Initial Dct Image:\n");
+    //printMat(DctCb);
+
+    const auto blocksize = 8u;
+
+    for (uint w = 0; w < width; w += blocksize) {
+        for (uint h = 0; h < height; h += blocksize) {
+            // generate slice for dct function
+            const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(w, w+blocksize), range(h, h+blocksize));
+            //printf("Slice %d/%d:\n", w, h);
+            //printMat(slice_src);
+
+            // do the dct
+            auto dct_slice = dctMat(slice_src);
+            //printf("Dct Slice:\n", w, h);
+            //printMat(dct_slice);
+
+            // assign the dct result to the dct "image" matrix
+            matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(w, w+blocksize), range(h, h+blocksize));
+            slice_dst.assign(dct_slice);
+            //printf("Dct Image:\n");
+            //printMat(DctCb);
+        }
+    }
 }
 
 void Image::writeJPEG(std::wstring file)

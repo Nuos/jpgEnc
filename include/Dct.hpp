@@ -42,7 +42,7 @@ const PixelDataType s7 = 1 / (4 * c7);
 
 void dctAraiSchema(matrix<PixelDataType>& x);
 
-matrix<PixelDataType> dctArai(const matrix<PixelDataType>& x) {
+inline matrix<PixelDataType> dctArai(const matrix<PixelDataType>& x) {
     matrix<PixelDataType> y = x;
     dctAraiSchema(y);
     y = trans(y);
@@ -50,7 +50,7 @@ matrix<PixelDataType> dctArai(const matrix<PixelDataType>& x) {
     return trans(y);
 }
 
-void dctAraiSchema(matrix<PixelDataType>& x) {
+inline void dctAraiSchema(matrix<PixelDataType>& x) {
     assert(x.size1() == 8 && x.size2() == 8);
 
     // A*x
@@ -138,7 +138,7 @@ void dctAraiSchema(matrix<PixelDataType>& x) {
 }
 
 
-matrix<PixelDataType> dctArai2(matrix<PixelDataType> x) {
+inline matrix<PixelDataType> dctArai2(matrix<PixelDataType> x) {
     assert(x.size1() == 8 && x.size2() == 8);
 
     matrix<PixelDataType> y(8, 8);
@@ -231,7 +231,7 @@ matrix<PixelDataType> dctArai2(matrix<PixelDataType> x) {
     return y;
 }
 
-matrix<PixelDataType> dctDirect(matrix<PixelDataType> X) 
+inline matrix<PixelDataType> dctDirect(matrix<PixelDataType> X) 
 {
     assert(X.size1() == 8 && X.size2() == 8);
 
@@ -281,7 +281,7 @@ matrix<PixelDataType> dctDirect(matrix<PixelDataType> X)
 
 }
 
-matrix<PixelDataType> dctMat(matrix<PixelDataType> X) 
+inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X) 
 {
     const auto blocksize = 8U;
     assert(X.size1() == blocksize && X.size2() == blocksize);

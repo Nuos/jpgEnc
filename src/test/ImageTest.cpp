@@ -308,4 +308,10 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         BOOST_CHECK_EQUAL(SOF0_3c.component_setup[7], CompSetup::Half);
         BOOST_CHECK_EQUAL(SOF0_3c.component_setup[8], 2);
     }
+
+    // applying dct
+    {
+        auto image = loadPPM("res/tester_p3.ppm");
+        image.applyDCT(Image::Matrix);
+    }
 }

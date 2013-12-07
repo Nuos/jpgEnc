@@ -48,6 +48,13 @@ public:
         S420_lm,    // between vertical pixels
     };
 
+    enum DCTMode
+    {
+        Simple,
+        Matrix,
+        Arai
+    };
+
     // INTERFACE
 public:
     // CTORS
@@ -68,6 +75,8 @@ public:
     // apply subsampling to the color matrix<PixelDataType>s (Cb, Cr)
     void applySubsampling(SubsamplingMode mode);
 
+    void applyDCT(DCTMode mode);
+
     // JPEG SEGMENTS
     void writeJPEG(std::wstring file);
 
@@ -86,4 +95,5 @@ public:
 private:
     ColorSpace color_space_type;
     matrix<PixelDataType> one, two, three;
+    matrix<PixelDataType> DctY, DctCb, DctCr;
 };
