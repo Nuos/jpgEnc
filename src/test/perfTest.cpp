@@ -22,12 +22,13 @@ const auto writes = 1e8;
 
 #define TIME(description, function) timeFn(#description, [&]() { #function });
 
-void timeFn(std::string desc, std::function<void()> fn)
+long long timeFn(std::string desc, std::function<void()> fn)
 {
     auto start = high_resolution_clock::now();
     fn();
     auto end = high_resolution_clock::now();
     std::cout << desc << " took " << duration_cast<milliseconds>(end - start).count() << " ms\n";
+    return duration_cast<milliseconds>(end - start).count();
 }
 
 void timeFn(std::function<void()> fn) { timeFn("", fn); }
@@ -130,16 +131,63 @@ void test_dct_arai() {
     std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
 }
 
+// takes in release build alltogether around 20 seconds on a 3.0 GHz Intel Q9650  Processor
+void test_dcts()
+{
+    PRINT_TEST_NAME;
+
+    auto img = loadPerformanceTestImage();
+
+#if _DEBUG
+    const uint count = 1e1;
+#else
+    const uint count = 1e2;
+#endif
+
+    auto copy_img = img;
+    long long duration = 0;
+
+    auto LogOneTransformDuration = [count](long long duration){
+        printf("\tAvg: %f ms\n", duration * 1.0 / count);
+    };
+
+    duration = timeFn("Simple Dct", [&copy_img, count]() { 
+        for (auto i = 0U; i < count; ++i)
+            copy_img.applyDCT(Image::DCTMode::Simple);
+    });
+    LogOneTransformDuration(duration);
+
+    duration = timeFn("Matrix Dct", [&copy_img, count]() { 
+        for (auto i = 0U; i < count; ++i)
+            copy_img.applyDCT(Image::DCTMode::Matrix);
+    });
+    LogOneTransformDuration(duration);
+
+    duration = timeFn("Arai Dct", [&copy_img, count]() { 
+        for (auto i = 0U; i < count; ++i)
+            copy_img.applyDCT(Image::DCTMode::Arai);
+    });
+    LogOneTransformDuration(duration);
+
+    duration = timeFn("Arai Fast Dct", [&copy_img, count]() { 
+        for (auto i = 0U; i < count; ++i)
+            copy_img.applyDCT(Image::DCTMode::Arai2Fast);
+    });
+    LogOneTransformDuration(duration);
+}
+
 int main()
 {
-    test_bitstream<boost::dynamic_bitset<>>();
-    test_bitstream<Bitstream64>();
-    test_bitstream<Bitstream8>();
+    //test_bitstream<boost::dynamic_bitset<>>();
+    //test_bitstream<Bitstream64>();
+    //test_bitstream<Bitstream8>();
 
-    test_ppm_loading();
-    test_jpeg_segment_writing();
+    //test_ppm_loading();
+    //test_jpeg_segment_writing();
 
     test_dct_arai();
+
+    test_dcts();
 
     return 0;
 }

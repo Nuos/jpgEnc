@@ -24,6 +24,10 @@ class Image;
 // load a ppm file (P3 or P6 version)
 Image loadPPM(std::string path);
 
+// generate image used for performance tests in assignment 4.4c
+// Image is in Colorspace YBcCr and only channel Cb is used
+Image loadPerformanceTestImage();
+
 // fast version of atoi. No error checking, nothing.
 int fast_atoi(const char * str);
 
@@ -52,7 +56,8 @@ public:
     {
         Simple,
         Matrix,
-        Arai
+        Arai,
+        Arai2Fast
     };
 
     // INTERFACE

@@ -489,6 +489,18 @@ Image loadPPM(std::string path) {
     return img;
 }
 
+Image loadPerformanceTestImage() {
+    Image img(256, 256, Image::YCbCr);
+
+    for (auto x = 0U; x < img.width; ++x) {
+        for (auto y = 0U; y < img.height; ++y) {
+            img.Cb(y, x) = (x + y*8) % 256;
+        }
+    }
+
+    return img;
+}
+
 void Image::applyDCT(DCTMode mode) 
 {
     auto printMat = [](const matrix<PixelDataType> &mat) {
@@ -500,6 +512,25 @@ void Image::applyDCT(DCTMode mode)
         }
         printf("\n");
     };
+
+    std::function<matrix<PixelDataType>(matrix<PixelDataType>)> dctFn;
+
+    switch (mode) {
+    case Simple:
+        dctFn = dctDirect;
+        break;
+    case Matrix:
+        dctFn = dctMat;
+        break;
+    case Arai:
+        dctFn = dctArai;
+        break;
+    case Arai2Fast:
+        dctFn = dctArai2;
+        break;
+    default:
+        assert(!"This DCT mode isn't supported!");
+    }
 
     //printMat(Cb);
     DctCb = zero_matrix<PixelDataType>(Cb.size1(), Cb.size2());
@@ -517,7 +548,7 @@ void Image::applyDCT(DCTMode mode)
             //printMat(slice_src);
 
             // do the dct
-            auto dct_slice = dctMat(slice_src);
+            auto dct_slice = dctFn(slice_src);
             //printf("Dct Slice:\n", w, h);
             //printMat(dct_slice);
 
