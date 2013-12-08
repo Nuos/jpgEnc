@@ -28,19 +28,6 @@ Arai Fast Dct took 1479 ms
 
 ----
   
-Computing A and A_transpose only once!  
--> ~40% FASTER
-
->>> test_dcts:
-Matrix Dct took 3345 ms
-	Avg: 3.345000 ms
-Arai Dct took 1832 ms
-	Avg: 1.832000 ms
-Arai Fast Dct took 1298 ms
-	Avg: 1.298000 ms
-  
-----
-  
 Using block_prod() instead of prod()
 -> SLOWER
 
@@ -65,3 +52,30 @@ Arai Dct took 1531 ms
 	One 256x256 image: 1.531000 ms
 Arai Fast Dct took 1322 ms
 	One 256x256 image: 1.322000 ms
+
+----
+  
+Computing A and A_transpose only once!  
+-> ~40% FASTER
+
+>>> test_dcts:
+Matrix Dct took 3345 ms
+	Avg: 3.345000 ms
+Arai Dct took 1832 ms
+	Avg: 1.832000 ms
+Arai Fast Dct took 1298 ms
+	Avg: 1.298000 ms
+  
+----
+
+Launching 4 async tasks
+-> ~60% FASTER
+
+>>> test_dcts:
+Processing DCT 1000 times!
+Matrix Dct took 1259 ms
+	One 256x256 image: 1.259000 ms
+Arai Dct took 809 ms
+	One 256x256 image: 0.809000 ms
+Arai Fast Dct took 775 ms
+	One 256x256 image: 0.775000 ms
