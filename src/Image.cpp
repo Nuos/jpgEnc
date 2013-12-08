@@ -11,6 +11,7 @@
 
 #include "JpegSegments.hpp"
 #include "Dct.hpp"
+#include "Huffman.hpp"
 
 using boost::numeric::ublas::matrix_range;
 using boost::numeric::ublas::range;
@@ -557,13 +558,23 @@ void Image::applyDCT(DCTMode mode)
 
 void Image::writeJPEG(std::wstring file)
 {
-    std::ofstream jpeg(file);
+    std::ofstream jpeg(file, std::ios::binary);
 
     using namespace Segment;
 
-    auto codedata = vector<vector<int>>(17);
-    codedata[2] = vector<int>{{ 0, 4, 9 }};
-    codedata[3] = vector<int>{{ 1, 7 }};
+    vector<int> text;
+    for (int i = 0; i < 256; i++) {
+        // to get some maximum length ones
+        if (i < 10)
+            text.push_back(i);
+        else
+            for (int j = 0; j < i; j++)
+                text.push_back(i);
+    }
+
+    auto pair = generateHuffmanCode(text);
+    SymbolCodeMap code_map = pair.first; // for encoding
+    SymbolsPerLength codedata = pair.second;
 
     jpeg << SOI
         << APP0

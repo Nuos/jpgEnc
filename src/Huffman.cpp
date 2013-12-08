@@ -1,6 +1,6 @@
 #include "Huffman.hpp"
 
-SymbolCodeMap generateCodeMap(std::vector<int> text) {
+pair<SymbolCodeMap, SymbolsPerLength> generateHuffmanCode(std::vector<int> text) {
     assert(text.size() > 0);
 
     unordered_map<int, int> symbol_counts;
@@ -17,21 +17,24 @@ SymbolCodeMap generateCodeMap(std::vector<int> text) {
     if (symbol_counts.size() == 1) {
         SymbolCodeMap code_map;
         code_map.emplace(text[0], Code(Bitstream({ 0 })));
-        return code_map;
+
+        SymbolsPerLength symbols(17);
+        symbols[1] = { text[0] };
+
+        return std::make_pair(code_map, symbols);
     }
 
     // list of symbols grouped by code length
     // symbols_for_length = symbols[code_length]
-    // TODO: return this list as well
-    vector<vector<int>> symbols = package_merge(symbol_frequency, 15);
+    SymbolsPerLength symbols = package_merge(symbol_frequency, 15);
     preventOnlyOnesCode(symbols);
 
     SymbolCodeMap code_map = generateCodes(symbols);
 
-    return code_map;
+    return std::make_pair(code_map, symbols);
 }
 
-void preventOnlyOnesCode(vector<vector<int>>& symbols) {
+void preventOnlyOnesCode(SymbolsPerLength& symbols) {
     assert(symbols.back().empty());
 
     // prevents a code consiting of only ones by putting that one one level deeper
@@ -44,7 +47,7 @@ void preventOnlyOnesCode(vector<vector<int>>& symbols) {
     it->push_back({ only_ones_symbol });
 }
 
-SymbolCodeMap generateCodes(const vector<vector<int>>& symbols) {
+SymbolCodeMap generateCodes(const SymbolsPerLength& symbols) {
     // based on the algorithm in
     // Reza Hashemian: Memory Efficient and High-speed Search Huffman Coding, 1995
 

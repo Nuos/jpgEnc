@@ -10,10 +10,12 @@
 #include <iostream>
 #include <assert.h>
 #include <iterator>
+#include <utility>
 
 using std::unordered_map;
 using std::priority_queue;
 using std::vector;
+using std::pair;
 
 // a huffman code for a symbol
 struct Code {
@@ -44,13 +46,14 @@ struct Code {
 };
 
 using SymbolCodeMap = std::unordered_map<int, Code>;
+using SymbolsPerLength = vector<vector<int>>;
 
 
 // takes a text, caluclates the probability of every symbol and returns a map from symbols to huffman codes
-SymbolCodeMap generateCodeMap(std::vector<int> text);
+pair<SymbolCodeMap, SymbolsPerLength> generateHuffmanCode(std::vector<int> text);
 
-void preventOnlyOnesCode(vector<vector<int>>& symbols);
-SymbolCodeMap generateCodes(const vector<vector<int>>& symbols);
+void preventOnlyOnesCode(SymbolsPerLength& symbols);
+SymbolCodeMap generateCodes(const SymbolsPerLength& symbols);
 
 
 
@@ -108,7 +111,7 @@ struct Package {
 // input: list of symbols (with its frequency)
 //        maximum code length
 // output: a code length for each symbol
-inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limit) {
+inline SymbolsPerLength package_merge(vector<Symbol> symbols, int length_limit) {
     assert(symbols.size() <= pow(2, length_limit));
 
     auto comp = [](const Package& lhs, const Package& rhs) {
@@ -158,7 +161,9 @@ inline vector<vector<int>> package_merge(vector<Symbol> symbols, int length_limi
     }
 
     // put it in a vector for easy usage
-    vector<vector<int>> symbolsByCodeLength(length_limit+1);
+    // +2 to allow for easy insertion of the 111..1 code one level deeper
+    // (guess we should refactor that stupid data structure)
+    SymbolsPerLength symbolsByCodeLength(length_limit+2); 
     for (auto it = code_lengths.begin(); it != code_lengths.end(); ++it){
         // second: code length
         // first: symbol
