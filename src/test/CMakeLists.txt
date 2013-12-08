@@ -1,4 +1,9 @@
 # Test project files
+file(GLOB INCLUDE_FILES_UNIT_TEST
+          "${CMAKE_SOURCE_DIR}/include/test/*.h"
+          "${CMAKE_SOURCE_DIR}/include/test/*.hpp"
+     )
+     
 set(SOURCE_FILES_UNIT_TEST
     common.cpp
     ImageTest.cpp
@@ -14,7 +19,7 @@ set(SOURCE_FILES_PERF_TEST
     
 
 # Unit tests
-add_executable(${PROJECT_TEST} ${SOURCE_FILES_UNIT_TEST}) 
+add_executable(${PROJECT_TEST} ${SOURCE_FILES_UNIT_TEST} ${INCLUDE_FILES_UNIT_TEST}) 
 target_link_libraries(${PROJECT_TEST} ${Boost_LIBRARIES} ${PROJECT_LIB})
 
 add_custom_target(RUN_TESTS ${PROJECT_TEST} 

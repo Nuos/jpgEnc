@@ -1,32 +1,8 @@
-#include <boost/test/unit_test.hpp>
+#include "test/unittest.hpp"
 
 #include "Image.hpp"
 #include "BitstreamGeneric.hpp"
 #include "JpegSegments.hpp"
-
-int add(int i, int j) { return i+j; }
-
-#define CHECK_CLOSE(left, right) BOOST_CHECK_CLOSE(left, right, 0.1)
-
-BOOST_AUTO_TEST_CASE(test_add) {
-    // seven ways to detect and report the same error:
-    BOOST_CHECK(add(2, 2) == 4);        // #1 continues on error
-
-    BOOST_REQUIRE(add(2, 2) == 4);      // #2 throws on error
-
-    if (add(2, 2) != 4)
-        BOOST_ERROR("Ouch...");            // #3 continues on error
-
-    if (add(2, 2) != 4)
-        BOOST_FAIL("Ouch...");             // #4 throws on error
-
-    if (add(2, 2) != 4) throw "Ouch..."; // #5 throws on error
-
-    BOOST_CHECK_MESSAGE(add(2, 2) == 4,  // #6 continues on error
-                        "add(..) result: " << add(2, 2));
-
-    BOOST_CHECK_EQUAL(add(2, 2), 4);	  // #7 continues on error
-}
 
 BOOST_AUTO_TEST_CASE(image_loading_test) {
     auto image = loadPPM("res/tester_p3.ppm");
@@ -72,17 +48,17 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.1949);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195);
     CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
     CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
 
     CHECK_CLOSE(YCbCr_image. Y(1, 1), 9.6030);
-    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.5319);
+    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.532);
     CHECK_CLOSE(YCbCr_image.Cr(1, 1), 121.1519);
 
     // converting from YCbCr to YCbCr doesn't do a thing!
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.1949);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195);
     CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
     CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
 
@@ -247,13 +223,13 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         BOOST_CHECK_EQUAL(bytes[4], '\0');
     }
 
-    // writing jpeg segments
+    // writing dummy image segments
     {
         Image img(4, 4, Image::RGB);
         img.writeJPEG(L"abc.jpeg");
     }
 
-    // writing jpeg segments
+    // writing draigoch jpeg segments
     {
         auto image = loadPPM("res/Draigoch_p6.ppm");
         image.writeJPEG(L"Draigoch.jpeg");
@@ -308,7 +284,9 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         BOOST_CHECK_EQUAL(SOF0_3c.component_setup[7], CompSetup::Half);
         BOOST_CHECK_EQUAL(SOF0_3c.component_setup[8], 2);
     }
+}
 
+BOOST_AUTO_TEST_CASE(applying_dct) {
     // applying dct
     {
         auto image = loadPPM("res/tester_p3.ppm");

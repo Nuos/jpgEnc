@@ -158,6 +158,21 @@ void test_dct_matrix() {
     std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
 }
 
+
+// generate image used for performance tests in assignment 4.4c
+// Image is in Colorspace YBcCr and only channel Cb is used
+Image loadPerformanceTestImage() {
+    Image img(256, 256, Image::YCbCr);
+
+    for (auto x = 0U; x < img.width; ++x) {
+        for (auto y = 0U; y < img.height; ++y) {
+            img.Cb(y, x) = (x + y*8) % 256;
+        }
+    }
+
+    return img;
+}
+
 // takes in release build alltogether around 20 seconds on a 3.0 GHz Intel Q9650  Processor
 void test_dcts()
 {

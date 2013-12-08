@@ -208,7 +208,8 @@ namespace Segment
 
                 // symbol order is arbitrary, see itu-t81.pdf Page 51
 
-                code_lengths[i-1] = symbol_list.size();
+                assert(symbol_list.size() < 256);
+                code_lengths[i-1] = static_cast<Byte>(symbol_list.size());
                 symbols.insert(end(symbols), begin(symbol_list), end(symbol_list));
             }
 

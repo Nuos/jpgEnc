@@ -489,30 +489,9 @@ Image loadPPM(std::string path) {
     return img;
 }
 
-Image loadPerformanceTestImage() {
-    Image img(256, 256, Image::YCbCr);
-
-    for (auto x = 0U; x < img.width; ++x) {
-        for (auto y = 0U; y < img.height; ++y) {
-            img.Cb(y, x) = (x + y*8) % 256;
-        }
-    }
-
-    return img;
-}
-
+// NOTE: only processes the Cb channel
 void Image::applyDCT(DCTMode mode) 
 {
-    auto printMat = [](const matrix<PixelDataType> &mat) {
-        for (auto i = 0u; i < mat.size1(); ++i) {
-            for (auto j = 0u; j < mat.size2(); ++j) {
-                printf("%7.3f,", mat(i, j));
-            }
-            printf("\n");
-        }
-        printf("\n");
-    };
-
     std::function<matrix<PixelDataType>(matrix<PixelDataType>)> dctFn;
 
     switch (mode) {
@@ -532,11 +511,7 @@ void Image::applyDCT(DCTMode mode)
         assert(!"This DCT mode isn't supported!");
     }
 
-    //printMat(Cb);
     DctCb = zero_matrix<PixelDataType>(Cb.size1(), Cb.size2());
-
-    //printf("Initial Dct Image:\n");
-    //printMat(DctCb);
 
     const auto blocksize = 8u;
 
@@ -544,19 +519,13 @@ void Image::applyDCT(DCTMode mode)
         for (uint h = 0; h < height; h += blocksize) {
             // generate slice for dct function
             const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(w, w+blocksize), range(h, h+blocksize));
-            //printf("Slice %d/%d:\n", w, h);
-            //printMat(slice_src);
 
             // do the dct
             auto dct_slice = dctFn(slice_src);
-            //printf("Dct Slice:\n", w, h);
-            //printMat(dct_slice);
 
             // assign the dct result to the dct "image" matrix
             matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(w, w+blocksize), range(h, h+blocksize));
             slice_dst.assign(dct_slice);
-            //printf("Dct Image:\n");
-            //printMat(DctCb);
         }
     }
 }

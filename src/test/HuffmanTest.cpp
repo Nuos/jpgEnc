@@ -1,7 +1,8 @@
-#include <boost/test/unit_test.hpp>
-#include <vector>
-#include "BitstreamGeneric.hpp"
+#include "test/unittest.hpp"
 
+#include <vector>
+
+#include "BitstreamGeneric.hpp"
 #include "Huffman.hpp"
 
 bool equals(Code code, Bitstream stream) {

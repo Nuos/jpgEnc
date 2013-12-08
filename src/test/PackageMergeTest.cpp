@@ -1,4 +1,4 @@
-#include <boost/test/unit_test.hpp>
+#include <test/unittest.hpp>
 
 #include "Huffman.hpp"
 
