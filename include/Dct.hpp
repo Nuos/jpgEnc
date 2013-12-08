@@ -304,11 +304,11 @@ inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X)
 
     auto A_transpose = trans(A);
 
-    // axpy_prod(A, B, C, false); // C += A * B
+    // Y = (A * X) * A_transpose
     matrix<PixelDataType> first = prod(A, X);
-    matrix<PixelDataType> res = prod(first, A_transpose);
+    matrix<PixelDataType> Y = prod(first, A_transpose);
 
-    return res;
+    return Y;
 }
 
 inline matrix<PixelDataType> inverseDctMat(matrix<PixelDataType> X) 

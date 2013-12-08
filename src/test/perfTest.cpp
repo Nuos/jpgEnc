@@ -131,6 +131,33 @@ void test_dct_arai() {
     std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
 }
 
+void test_dct_matrix() {
+    PRINT_TEST_NAME;
+    
+    matrix<PixelDataType> m(8, 8);
+    for (int x = 0; x < 8; x++) {
+        for (int y = 0; y < 8; y++) {
+            m(y, x) = (x + 8 * y) % 256;
+        }
+    }
+    matrix<PixelDataType> dct;
+    
+#if _DEBUG
+    const int count = 1e2;
+#else
+    const int count = 2e6;
+#endif
+
+    // matrix version
+    auto start = high_resolution_clock::now();
+    for (int i = 0; i < count; i++) {
+        dct = dctMat(m);
+    }
+    auto end = high_resolution_clock::now();
+    std::cout << count << " 8x8 DCT with matrix: " << duration_cast<milliseconds>(end - start).count() << "ms";
+    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
+}
+
 // takes in release build alltogether around 20 seconds on a 3.0 GHz Intel Q9650  Processor
 void test_dcts()
 {
@@ -141,7 +168,7 @@ void test_dcts()
 #if _DEBUG
     const uint count = 1e1;
 #else
-    const uint count = 1e2;
+    const uint count = 1e3;
 #endif
 
     auto copy_img = img;
@@ -151,11 +178,12 @@ void test_dcts()
         printf("\tAvg: %f ms\n", duration * 1.0 / count);
     };
 
-    duration = timeFn("Simple Dct", [&copy_img, count]() { 
-        for (auto i = 0U; i < count; ++i)
-            copy_img.applyDCT(Image::DCTMode::Simple);
-    });
-    LogOneTransformDuration(duration);
+    //// Ugh! SLOOOOOW!
+    //duration = timeFn("Simple Dct", [&copy_img, count]() { 
+    //    for (auto i = 0U; i < count; ++i)
+    //        copy_img.applyDCT(Image::DCTMode::Simple);
+    //});
+    //LogOneTransformDuration(duration);
 
     duration = timeFn("Matrix Dct", [&copy_img, count]() { 
         for (auto i = 0U; i < count; ++i)
@@ -185,7 +213,8 @@ int main()
     //test_ppm_loading();
     //test_jpeg_segment_writing();
 
-    test_dct_arai();
+    //test_dct_arai();
+    //test_dct_matrix();
 
     test_dcts();
 
