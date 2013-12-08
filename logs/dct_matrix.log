@@ -1,22 +1,6 @@
-SHA-1: b89e93aeda21b0dcea1e943fb22dfd60fa989c4f
-
->>> test_ppm_loading:
-loading p3 ppm took 1, 0, 0 ms ~0.3 ms
-loading p6 ppm took 0, 0, 1 ms ~0.3 ms
-loading draigoch p6 ppm took 150, 149, 166 ms     ~ 155.0ms
-loading draigoch p3 ppm took 1134, 1129, 1270 ms  ~1177.6ms
-
-SHA-1: ae8d476a4008fbb3590ed8afaa1886bbbd963713
-faster file reading
-
->>> test_ppm_loading:
-loading p3 ppm took 0, 1, 0 ms ~0.3 ms  +/- 0%
-loading p6 ppm took 0, 0, 0 ms ~0.0ms   +/- 0%
-loading draigoch p6 ppm took 133, 153, 127 ms     ~ 137.6ms  -11,2%
-loading draigoch p3 ppm took 1067, 1141, 1059 ms  ~1089.0ms  - 7,5%
-
 --------------------------------------------------------------------------
-
+| DCT Matrix Tests
+--------------------------------------------------------------------------
 SHA-1: 7a15ee05e8325e6a8d2d4508b28eac8581f53a74
 * add matrix dct performance test
 
@@ -28,8 +12,11 @@ Arai Dct took 1637 ms
 Arai Fast Dct took 1562 ms
 	Avg: 1.562000 ms
 
+----
+  
 SHA-1: d9ef4c44136b3635dbeeae02fe774ea98c4617ad
 * Y = A * (X * A_transpose) seems to be a little faster
+-> ~9% FASTER
 
 >>> test_dcts:
 Matrix Dct took 5971 ms   // Y = A * (X * A_transpose)
@@ -39,7 +26,10 @@ Arai Dct took 1680 ms
 Arai Fast Dct took 1479 ms
 	Avg: 1.479000 ms
 
+----
+  
 Computing A and A_transpose only once!  
+-> ~40% FASTER
 
 >>> test_dcts:
 Matrix Dct took 3345 ms
@@ -48,3 +38,30 @@ Arai Dct took 1832 ms
 	Avg: 1.832000 ms
 Arai Fast Dct took 1298 ms
 	Avg: 1.298000 ms
+  
+----
+  
+Using block_prod() instead of prod()
+-> SLOWER
+
+>>> test_dcts:
+Processing DCT 1000 times!
+Matrix Dct took 5576 ms
+	One 256x256 image: 5.576000 ms
+Arai Dct took 1944 ms
+	One 256x256 image: 1.944000 ms
+Arai Fast Dct took 1501 ms
+	One 256x256 image: 1.501000 ms
+
+----
+  
+Using axpy_prod() instead of prod()
+-> SLOWER
+
+Processing DCT 1000 times!
+Matrix Dct took 6368 ms
+	One 256x256 image: 6.368000 ms
+Arai Dct took 1531 ms
+	One 256x256 image: 1.531000 ms
+Arai Fast Dct took 1322 ms
+	One 256x256 image: 1.322000 ms

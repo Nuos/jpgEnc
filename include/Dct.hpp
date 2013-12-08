@@ -306,9 +306,11 @@ inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X)
 
     static const auto A_transpose = trans(A);
 
+    using mat = matrix<PixelDataType>;
+
     // Y = A * (X * A_transpose)
-    matrix<PixelDataType> first = prod(X, A_transpose);
-    matrix<PixelDataType> Y = prod(A, first);
+    mat first = prod(X, A_transpose);
+    mat Y = prod(A, first);
 
     return Y;
 }
