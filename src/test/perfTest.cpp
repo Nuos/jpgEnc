@@ -174,9 +174,11 @@ void test_dcts()
     auto copy_img = img;
     long long duration = 0;
 
-    auto LogOneTransformDuration = [count](long long duration){
-        printf("\tAvg: %f ms\n", duration * 1.0 / count);
+    auto LogOneTransformDuration = [count, &img](long long duration){
+        printf("\tOne %dx%d image: %f ms\n", img.width, img.height, duration * 1.0 / count);
     };
+
+    printf("Processing DCT %d times!\n", count);
 
     //// Ugh! SLOOOOOW!
     //duration = timeFn("Simple Dct", [&copy_img, count]() { 

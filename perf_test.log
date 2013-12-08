@@ -15,6 +15,7 @@ loading p6 ppm took 0, 0, 0 ms ~0.0ms   +/- 0%
 loading draigoch p6 ppm took 133, 153, 127 ms     ~ 137.6ms  -11,2%
 loading draigoch p3 ppm took 1067, 1141, 1059 ms  ~1089.0ms  - 7,5%
 
+--------------------------------------------------------------------------
 
 SHA-1: 7a15ee05e8325e6a8d2d4508b28eac8581f53a74
 * add matrix dct performance test
@@ -27,6 +28,9 @@ Arai Dct took 1637 ms
 Arai Fast Dct took 1562 ms
 	Avg: 1.562000 ms
 
+SHA-1: d9ef4c44136b3635dbeeae02fe774ea98c4617ad
+* Y = A * (X * A_transpose) seems to be a little faster
+
 >>> test_dcts:
 Matrix Dct took 5971 ms   // Y = A * (X * A_transpose)
 	Avg: 5.971000 ms
@@ -34,3 +38,13 @@ Arai Dct took 1680 ms
 	Avg: 1.680000 ms
 Arai Fast Dct took 1479 ms
 	Avg: 1.479000 ms
+
+Computing A and A_transpose only once!  
+
+>>> test_dcts:
+Matrix Dct took 3345 ms
+	Avg: 3.345000 ms
+Arai Dct took 1832 ms
+	Avg: 1.832000 ms
+Arai Fast Dct took 1298 ms
+	Avg: 1.298000 ms

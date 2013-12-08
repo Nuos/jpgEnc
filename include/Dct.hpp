@@ -286,23 +286,25 @@ inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X)
     const auto blocksize = 8U;
     assert(X.size1() == blocksize && X.size2() == blocksize);
 
-    auto C = [](unsigned int row) -> PixelDataType { return row == 0 ? 1./root_two<PixelDataType>() : 1.; };
-    const auto N = blocksize;
-
-    auto scale = sqrt(2./N);
-
     // Matrix A
-    matrix<PixelDataType> A(blocksize, blocksize);
-    for (auto k = 0U; k < blocksize; ++k) {
-        for (auto n = 0U; n < blocksize; ++n) {
-            auto co = C(k);
-            auto cos_term = (2.*n + 1.) * ((k * pi<PixelDataType>()) / (2.*N));
-            auto cos_val = cos(cos_term);
-            A(k, n) = co * scale * cos_val;
-        }
-    }
+    static const matrix<PixelDataType> A = [blocksize](){
+        const auto PI = pi<PixelDataType>();
+        const auto N = blocksize;
+        const auto Ntimes2 = (2.*N);
+        const auto scale = sqrt(2./N);
+        const auto C0 = [](unsigned int row) -> PixelDataType { return row == 0 ? 1./root_two<PixelDataType>() : 1.; };
 
-    auto A_transpose = trans(A);
+        matrix<PixelDataType> A(blocksize, blocksize);
+        for (auto k = 0U; k < blocksize; ++k) {
+            for (auto n = 0U; n < blocksize; ++n) {
+                auto cos_term = (2.*n + 1.) * ((k * PI) / Ntimes2);
+                A(k, n) = C0(k) * scale * cos(cos_term);
+            }
+        };
+        return A;
+    }();
+
+    static const auto A_transpose = trans(A);
 
     // Y = A * (X * A_transpose)
     matrix<PixelDataType> first = prod(X, A_transpose);
