@@ -291,7 +291,7 @@ inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X)
 
     auto scale = sqrt(2./N);
 
-    // Output Matrix
+    // Matrix A
     matrix<PixelDataType> A(blocksize, blocksize);
     for (auto k = 0U; k < blocksize; ++k) {
         for (auto n = 0U; n < blocksize; ++n) {
@@ -304,9 +304,9 @@ inline matrix<PixelDataType> dctMat(matrix<PixelDataType> X)
 
     auto A_transpose = trans(A);
 
-    // Y = (A * X) * A_transpose
-    matrix<PixelDataType> first = prod(A, X);
-    matrix<PixelDataType> Y = prod(first, A_transpose);
+    // Y = A * (X * A_transpose)
+    matrix<PixelDataType> first = prod(X, A_transpose);
+    matrix<PixelDataType> Y = prod(A, first);
 
     return Y;
 }
