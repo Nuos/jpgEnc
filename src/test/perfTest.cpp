@@ -168,7 +168,7 @@ void test_dcts()
 #if _DEBUG
     const uint count = 1e1;
 #else
-    const uint count = 1e3;
+    const uint count = 5e3;
 #endif
 
     auto copy_img = img;
@@ -187,17 +187,17 @@ void test_dcts()
     //});
     //LogOneTransformDuration(duration);
 
-    duration = timeFn("Matrix Dct", [&copy_img, count]() { 
-        for (auto i = 0U; i < count; ++i)
-            copy_img.applyDCT(Image::DCTMode::Matrix);
-    });
-    LogOneTransformDuration(duration);
+    //duration = timeFn("Matrix Dct", [&copy_img, count]() { 
+    //    for (auto i = 0U; i < count; ++i)
+    //        copy_img.applyDCT(Image::DCTMode::Matrix);
+    //});
+    //LogOneTransformDuration(duration);
 
-    duration = timeFn("Arai Dct", [&copy_img, count]() { 
-        for (auto i = 0U; i < count; ++i)
-            copy_img.applyDCT(Image::DCTMode::Arai);
-    });
-    LogOneTransformDuration(duration);
+    //duration = timeFn("Arai Dct", [&copy_img, count]() { 
+    //    for (auto i = 0U; i < count; ++i)
+    //        copy_img.applyDCT(Image::DCTMode::Arai);
+    //});
+    //LogOneTransformDuration(duration);
 
     duration = timeFn("Arai Fast Dct", [&copy_img, count]() { 
         for (auto i = 0U; i < count; ++i)
