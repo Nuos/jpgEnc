@@ -1,0 +1,22 @@
+--------------------------------------------------------------------------
+| DCT Matrix Tests
+--------------------------------------------------------------------------
+SHA-1: fd2134b5c111cfa77871e7404ec87225bd48f2f3
+>>> test_dcts:
+Processing DCT 10000 times!
+Matrix Dct took 6584 ms
+	One 256x256 image: 0.658400 ms
+Arai Dct took 4008 ms
+	One 256x256 image: 0.400800 ms
+Arai Fast Dct took 3216 ms
+	One 256x256 image: 0.321600 ms
+
+
+destination matrix slice as argument
+
+>>> test_dcts:
+Processing DCT 10000 times!
+Matrix Dct took 5997 ms
+	One 256x256 image: 0.599700 ms
+Arai Fast Dct took 2649 ms
+	One 256x256 image: 0.264900 ms

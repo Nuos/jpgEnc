@@ -3,10 +3,12 @@
 #include <boost/numeric/ublas/io.hpp>
 #include "Dct.hpp"
 
-matrix<PixelDataType> mat(const std::vector<PixelDataType>& v) {
+using mat = matrix<PixelDataType>;
+
+mat from_vector(const std::vector<PixelDataType>& v) {
     assert(v.size() == 64);
 
-    matrix<PixelDataType> m(8, 8);
+    mat m(8, 8);
     for (size_t i = 0; i < m.size1(); i++) {
         for (size_t j = 0; j < m.size2(); j++) {
             m(i, j) = v[i*m.size2() + j];
@@ -16,7 +18,7 @@ matrix<PixelDataType> mat(const std::vector<PixelDataType>& v) {
 }
 
 BOOST_AUTO_TEST_CASE(dct) {
-    auto m = mat({
+    auto m = from_vector({
          1, 2,  3,  4,  5,  6,  7,  8,
          9, 10, 11, 12, 13, 14, 15, 16,
         17, 18, 19, 20, 21, 22, 23, 24,
@@ -28,7 +30,7 @@ BOOST_AUTO_TEST_CASE(dct) {
     });
     BOOST_CHECK_EQUAL(m(2, 3), 20);
 
-    auto true_dct = mat({
+    auto true_dct = from_vector({
         260,               -18.2216411837961, 7.69085915161152e-15, -1.90481782616726, 0, -0.568239222367164, 1.85673764701218e-14, -0.143407824981022,
         -145.773129470369, 0,                 0, 0, 0, 0, 0, 0,
         0,                 0,                 0, 0, 0, 0, 0, 0,
@@ -39,20 +41,23 @@ BOOST_AUTO_TEST_CASE(dct) {
         -1.14726259984816, 0,                 0, 0, 0, 0, 0, 0
     });
 
-    auto dct = dctArai(m);
-    auto dct2 = dctArai2(m);
-    auto dct3 = dctDirect(m);
-    auto dct_matrix = dctMat(m);
+    mat dct(8, 8);
+    matrix_range<mat> dct_slice(dct, range(0, 8), range(0, 8));
 
+    dctArai(m, dct_slice);
     CHECK_EQUAL_MAT(dct, true_dct);
 
-    CHECK_EQUAL_MAT(dct2, true_dct);
-    CHECK_EQUAL_MAT(dct3, true_dct);
-    CHECK_EQUAL_MAT(dct_matrix, true_dct);
+    dct_slice *= 0;
+    dctDirect(m, dct_slice);
+    CHECK_EQUAL_MAT(dct_slice, true_dct);
+
+    dct_slice *= 0;
+    dctMat(m, dct_slice);
+    CHECK_EQUAL_MAT(dct_slice, true_dct);
 }
 
 BOOST_AUTO_TEST_CASE(dct_matrix) {
-    auto m = mat({
+    auto m = from_vector({
         1, 2, 3, 4, 5, 6, 7, 8,
         9, 10, 11, 12, 13, 14, 15, 16,
         17, 18, 19, 20, 21, 22, 23, 24,
@@ -64,7 +69,7 @@ BOOST_AUTO_TEST_CASE(dct_matrix) {
     });
     BOOST_CHECK_EQUAL(m(2, 3), 20);
 
-    auto true_dct = mat({
+    auto true_dct = from_vector({
         260,               -18.2216411837961, 7.69085915161152e-15, -1.90481782616726, 0, -0.568239222367164, 1.85673764701218e-14, -0.143407824981022,
         -145.773129470369, 0,                 0, 0, 0, 0, 0, 0,
         0,                 0,                 0, 0, 0, 0, 0, 0,
@@ -74,10 +79,12 @@ BOOST_AUTO_TEST_CASE(dct_matrix) {
         0,                 0,                 0, 0, 0, 0, 0, 0,
         -1.14726259984816, 0,                 0, 0, 0, 0, 0, 0
     });
+    mat dct(8, 8);
+    matrix_range<mat> dct_slice(dct, range(0, 8), range(0, 8));
 
-    auto dct_matrix = dctMat(m);
-    CHECK_EQUAL_MAT(dct_matrix, true_dct);
+    dctMat(m, dct_slice);
+    CHECK_EQUAL_MAT(dct, true_dct);
 
-    auto original = inverseDctMat(dct_matrix);
+    auto original = inverseDctMat(dct);
     CHECK_EQUAL_MAT(original, m);
 }

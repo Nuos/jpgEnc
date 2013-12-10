@@ -494,7 +494,7 @@ Image loadPPM(std::string path) {
 // NOTE: only processes the Cb channel
 void Image::applyDCT(DCTMode mode) 
 {
-    std::function<matrix<PixelDataType>(matrix<PixelDataType>)> dctFn;
+    std::function<void(matrix<PixelDataType>, matrix_range<matrix<PixelDataType>>&)> dctFn;
 
     switch (mode) {
     case Simple:
@@ -505,9 +505,6 @@ void Image::applyDCT(DCTMode mode)
         break;
     case Arai:
         dctFn = dctArai;
-        break;
-    case Arai2Fast:
-        dctFn = dctArai2;
         break;
     default:
         assert(!"This DCT mode isn't supported!");
@@ -545,7 +542,7 @@ void Image::applyDCT(DCTMode mode)
             const auto& src = elem.first;
             auto& dst = elem.second;
 
-            dst.assign(dctFn(src));
+            dctFn(src, dst);
         }
     };
 

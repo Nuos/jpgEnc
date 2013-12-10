@@ -52,8 +52,7 @@ public:
     {
         Simple,
         Matrix,
-        Arai,
-        Arai2Fast
+        Arai
     };
 
     // INTERFACE

@@ -104,6 +104,7 @@ void test_dct_arai() {
         }
     }
     matrix<PixelDataType> dct;
+    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
     
 #if _DEBUG
     const int count = 1e5;
@@ -111,22 +112,12 @@ void test_dct_arai() {
     const int count = 1e7;
 #endif
 
-    // first version
+
     auto start = high_resolution_clock::now();
     for (int i = 0; i < count; i++) {
-        dct = dctArai2(m);
+        dctArai(m, dct_slice);
     }
     auto end = high_resolution_clock::now();
-    std::cout << count << " 8x8 DCT with arai2: " << duration_cast<milliseconds>(end - start).count() << "ms";
-    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
-
-
-    // second version
-    start = high_resolution_clock::now();
-    for (int i = 0; i < count; i++) {
-        dct = dctArai(m);
-    }
-    end = high_resolution_clock::now();
     std::cout << count << " 8x8 DCT with arai: " << duration_cast<milliseconds>(end - start).count() << "ms";
     std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
 }
@@ -141,6 +132,7 @@ void test_dct_matrix() {
         }
     }
     matrix<PixelDataType> dct;
+    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
     
 #if _DEBUG
     const int count = 1e2;
@@ -151,7 +143,7 @@ void test_dct_matrix() {
     // matrix version
     auto start = high_resolution_clock::now();
     for (int i = 0; i < count; i++) {
-        dct = dctMat(m);
+        dctMat(m, dct_slice);
     }
     auto end = high_resolution_clock::now();
     std::cout << count << " 8x8 DCT with matrix: " << duration_cast<milliseconds>(end - start).count() << "ms";
@@ -183,7 +175,7 @@ void test_dcts()
 #if _DEBUG
     const uint count = 1e1;
 #else
-    const uint count = 1e3;
+    const uint count = 1e4;
 #endif
 
     auto copy_img = img;
@@ -208,15 +200,9 @@ void test_dcts()
     });
     LogOneTransformDuration(duration);
 
-    duration = timeFn("Arai Dct", [&copy_img, count]() { 
-        for (auto i = 0U; i < count; ++i)
-            copy_img.applyDCT(Image::DCTMode::Arai);
-    });
-    LogOneTransformDuration(duration);
-
     duration = timeFn("Arai Fast Dct", [&copy_img, count]() { 
         for (auto i = 0U; i < count; ++i)
-            copy_img.applyDCT(Image::DCTMode::Arai2Fast);
+            copy_img.applyDCT(Image::DCTMode::Arai);
     });
     LogOneTransformDuration(duration);
 }
