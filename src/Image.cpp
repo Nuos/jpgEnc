@@ -494,7 +494,7 @@ Image loadPPM(std::string path) {
 // NOTE: only processes the Cb channel
 void Image::applyDCT(DCTMode mode) 
 {
-    std::function<void(matrix<PixelDataType>, matrix_range<matrix<PixelDataType>>&)> dctFn;
+    std::function<void(const matrix_range<matrix<PixelDataType>>&, matrix_range<matrix<PixelDataType>>&)> dctFn;
 
     switch (mode) {
     case Simple:

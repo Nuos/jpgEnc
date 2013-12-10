@@ -41,18 +41,20 @@ BOOST_AUTO_TEST_CASE(dct) {
         -1.14726259984816, 0,                 0, 0, 0, 0, 0, 0
     });
 
+    matrix_range<mat> m_slice(m, range(0, 8), range(0, 8));
+
     mat dct(8, 8);
     matrix_range<mat> dct_slice(dct, range(0, 8), range(0, 8));
 
-    dctArai(m, dct_slice);
+    dctArai(m_slice, dct_slice);
     CHECK_EQUAL_MAT(dct, true_dct);
 
     dct_slice *= 0;
-    dctDirect(m, dct_slice);
+    dctDirect(m_slice, dct_slice);
     CHECK_EQUAL_MAT(dct_slice, true_dct);
 
     dct_slice *= 0;
-    dctMat(m, dct_slice);
+    dctMat(m_slice, dct_slice);
     CHECK_EQUAL_MAT(dct_slice, true_dct);
 }
 
@@ -79,10 +81,13 @@ BOOST_AUTO_TEST_CASE(dct_matrix) {
         0,                 0,                 0, 0, 0, 0, 0, 0,
         -1.14726259984816, 0,                 0, 0, 0, 0, 0, 0
     });
+
+    matrix_range<mat> m_slice(m, range(0, 8), range(0, 8));
+
     mat dct(8, 8);
     matrix_range<mat> dct_slice(dct, range(0, 8), range(0, 8));
 
-    dctMat(m, dct_slice);
+    dctMat(m_slice, dct_slice);
     CHECK_EQUAL_MAT(dct, true_dct);
 
     auto original = inverseDctMat(dct);

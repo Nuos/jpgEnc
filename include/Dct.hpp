@@ -44,7 +44,7 @@ const PixelDataType s7 = 1 / (4 * c7);
 
 
 
-inline void dctArai(const matrix<PixelDataType>& x, matrix_range<matrix<PixelDataType>>& y) {
+inline void dctArai(const matrix_range<matrix<PixelDataType>>& x, matrix_range<matrix<PixelDataType>>& y) {
     assert(x.size1() == 8 && x.size2() == 8);
 
     matrix<PixelDataType> temp_mat(8, 8);
@@ -214,7 +214,7 @@ inline void dctArai(const matrix<PixelDataType>& x, matrix_range<matrix<PixelDat
     }
 }
 
-inline void dctDirect(matrix<PixelDataType> X, matrix_range<matrix<PixelDataType>>& Y)
+inline void dctDirect(const matrix_range<matrix<PixelDataType>>& X, matrix_range<matrix<PixelDataType>>& Y)
 {
     assert(X.size1() == 8 && X.size2() == 8);
 
@@ -258,7 +258,7 @@ inline void dctDirect(matrix<PixelDataType> X, matrix_range<matrix<PixelDataType
     }
 }
 
-inline void dctMat(matrix<PixelDataType> X, matrix_range<matrix<PixelDataType>>& Y)
+inline void dctMat(const matrix_range<matrix<PixelDataType>>& X, matrix_range<matrix<PixelDataType>>& Y)
 {
     const auto blocksize = 8U;
     assert(X.size1() == blocksize && X.size2() == blocksize);

@@ -94,61 +94,61 @@ void test_jpeg_segment_writing()
     timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
 }
 
-void test_dct_arai() {
-    PRINT_TEST_NAME;
-    
-    matrix<PixelDataType> m(8, 8);
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            m(y, x) = (x + 8 * y) % 256;
-        }
-    }
-    matrix<PixelDataType> dct;
-    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
-    
-#if _DEBUG
-    const int count = 1e5;
-#else
-    const int count = 1e7;
-#endif
-
-
-    auto start = high_resolution_clock::now();
-    for (int i = 0; i < count; i++) {
-        dctArai(m, dct_slice);
-    }
-    auto end = high_resolution_clock::now();
-    std::cout << count << " 8x8 DCT with arai: " << duration_cast<milliseconds>(end - start).count() << "ms";
-    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
-}
-
-void test_dct_matrix() {
-    PRINT_TEST_NAME;
-    
-    matrix<PixelDataType> m(8, 8);
-    for (int x = 0; x < 8; x++) {
-        for (int y = 0; y < 8; y++) {
-            m(y, x) = (x + 8 * y) % 256;
-        }
-    }
-    matrix<PixelDataType> dct;
-    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
-    
-#if _DEBUG
-    const int count = 1e2;
-#else
-    const int count = 2e6;
-#endif
-
-    // matrix version
-    auto start = high_resolution_clock::now();
-    for (int i = 0; i < count; i++) {
-        dctMat(m, dct_slice);
-    }
-    auto end = high_resolution_clock::now();
-    std::cout << count << " 8x8 DCT with matrix: " << duration_cast<milliseconds>(end - start).count() << "ms";
-    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
-}
+//void test_dct_arai() {
+//    PRINT_TEST_NAME;
+//    
+//    matrix<PixelDataType> m(8, 8);
+//    for (int x = 0; x < 8; x++) {
+//        for (int y = 0; y < 8; y++) {
+//            m(y, x) = (x + 8 * y) % 256;
+//        }
+//    }
+//    matrix<PixelDataType> dct;
+//    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
+//    
+//#if _DEBUG
+//    const int count = 1e5;
+//#else
+//    const int count = 1e7;
+//#endif
+//
+//
+//    auto start = high_resolution_clock::now();
+//    for (int i = 0; i < count; i++) {
+//        dctArai(m, dct_slice);
+//    }
+//    auto end = high_resolution_clock::now();
+//    std::cout << count << " 8x8 DCT with arai: " << duration_cast<milliseconds>(end - start).count() << "ms";
+//    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
+//}
+//
+//void test_dct_matrix() {
+//    PRINT_TEST_NAME;
+//    
+//    matrix<PixelDataType> m(8, 8);
+//    for (int x = 0; x < 8; x++) {
+//        for (int y = 0; y < 8; y++) {
+//            m(y, x) = (x + 8 * y) % 256;
+//        }
+//    }
+//    matrix<PixelDataType> dct;
+//    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
+//    
+//#if _DEBUG
+//    const int count = 1e2;
+//#else
+//    const int count = 2e6;
+//#endif
+//
+//    // matrix version
+//    auto start = high_resolution_clock::now();
+//    for (int i = 0; i < count; i++) {
+//        dctMat(m, dct_slice);
+//    }
+//    auto end = high_resolution_clock::now();
+//    std::cout << count << " 8x8 DCT with matrix: " << duration_cast<milliseconds>(end - start).count() << "ms";
+//    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
+//}
 
 
 // generate image used for performance tests in assignment 4.4c
