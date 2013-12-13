@@ -12,10 +12,10 @@
 using namespace std::chrono;
 
 #if _DEBUG
-const auto writes = 1e5;
-#else
-const auto writes = 1e8;
+//#error Go into Release mode!
 #endif
+
+const auto writes = 1e8;
 
 #define PRINT_TEST_NAME std::cout << "\n>>> " << __FUNCTION__ << ":\n"
 #define PRINT_TEST_NAME_TYPE(TYPE) std::cout << "\n>>> " << __FUNCTION__ << ": " << typeid(TYPE).name() << "\n"
@@ -94,63 +94,6 @@ void test_jpeg_segment_writing()
     timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
 }
 
-//void test_dct_arai() {
-//    PRINT_TEST_NAME;
-//    
-//    matrix<PixelDataType> m(8, 8);
-//    for (int x = 0; x < 8; x++) {
-//        for (int y = 0; y < 8; y++) {
-//            m(y, x) = (x + 8 * y) % 256;
-//        }
-//    }
-//    matrix<PixelDataType> dct;
-//    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
-//    
-//#if _DEBUG
-//    const int count = 1e5;
-//#else
-//    const int count = 1e7;
-//#endif
-//
-//
-//    auto start = high_resolution_clock::now();
-//    for (int i = 0; i < count; i++) {
-//        dctArai(m, dct_slice);
-//    }
-//    auto end = high_resolution_clock::now();
-//    std::cout << count << " 8x8 DCT with arai: " << duration_cast<milliseconds>(end - start).count() << "ms";
-//    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
-//}
-//
-//void test_dct_matrix() {
-//    PRINT_TEST_NAME;
-//    
-//    matrix<PixelDataType> m(8, 8);
-//    for (int x = 0; x < 8; x++) {
-//        for (int y = 0; y < 8; y++) {
-//            m(y, x) = (x + 8 * y) % 256;
-//        }
-//    }
-//    matrix<PixelDataType> dct;
-//    matrix_range<matrix<PixelDataType>> dct_slice(dct, range(0, 8), range(0, 8));
-//    
-//#if _DEBUG
-//    const int count = 1e2;
-//#else
-//    const int count = 2e6;
-//#endif
-//
-//    // matrix version
-//    auto start = high_resolution_clock::now();
-//    for (int i = 0; i < count; i++) {
-//        dctMat(m, dct_slice);
-//    }
-//    auto end = high_resolution_clock::now();
-//    std::cout << count << " 8x8 DCT with matrix: " << duration_cast<milliseconds>(end - start).count() << "ms";
-//    std::cout << " avg: " << duration_cast<milliseconds>(end - start).count() * 1.0 / count << "ms\n";
-//}
-
-
 // generate image used for performance tests in assignment 4.4c
 // Image is in Colorspace YBcCr and only channel Cb is used
 Image loadPerformanceTestImage() {
@@ -165,49 +108,54 @@ Image loadPerformanceTestImage() {
     return img;
 }
 
-// takes in release build alltogether around 20 seconds on a 3.0 GHz Intel Q9650  Processor
-void test_dcts()
+void test_dcts(float stretch_factor)
 {
     PRINT_TEST_NAME;
 
     auto img = loadPerformanceTestImage();
 
-#if _DEBUG
-    const uint count = 1e1;
-#else
-    const uint count = 1e4;
-#endif
+    uint count = 0;
 
     auto copy_img = img;
     long long duration = 0;
 
-    auto LogOneTransformDuration = [count, &img](long long duration){
+    auto LogOneTransformDuration = [&img](long long duration, uint count){
         printf("\tOne %dx%d image: %f ms\n", img.width, img.height, duration * 1.0 / count);
     };
 
-    printf("Processing DCT %d times!\n", count);
+    // Ugh! SLOOOOOW!
+    count = 220 * stretch_factor;
+#if _DEBUG
+    count /= 30;
+#endif
+    duration = timeFn(std::string("Simple Dct ") + std::to_string(count) + " times", [&copy_img, count]() {
+        for (auto i = 0U; i < count; ++i)
+            copy_img.applyDCT(Image::DCTMode::Simple);
+    });
+    LogOneTransformDuration(duration, count);
 
-    //// Ugh! SLOOOOOW!
-    //duration = timeFn("Simple Dct", [&copy_img, count]() { 
-    //    for (auto i = 0U; i < count; ++i)
-    //        copy_img.applyDCT(Image::DCTMode::Simple);
-    //});
-    //LogOneTransformDuration(duration);
-
-    duration = timeFn("Matrix Dct", [&copy_img, count]() { 
+    count = 10000 * stretch_factor;
+#if _DEBUG
+    count /= 1000;
+#endif
+    duration = timeFn(std::string("Matrix Dct ") + std::to_string(count) + " times", [&copy_img, count]() {
         for (auto i = 0U; i < count; ++i)
             copy_img.applyDCT(Image::DCTMode::Matrix);
     });
-    LogOneTransformDuration(duration);
+    LogOneTransformDuration(duration, count);
 
-    duration = timeFn("Arai Fast Dct", [&copy_img, count]() { 
+    count = 30000 * stretch_factor;
+#if _DEBUG
+    count /= 200;
+#endif
+    duration = timeFn(std::string("Arai Fast Dct ") + std::to_string(count) + " times", [&copy_img, count]() {
         for (auto i = 0U; i < count; ++i)
             copy_img.applyDCT(Image::DCTMode::Arai);
     });
-    LogOneTransformDuration(duration);
+    LogOneTransformDuration(duration, count);
 }
 
-int main()
+int main(int argc, const char** argv)
 {
     //test_bitstream<boost::dynamic_bitset<>>();
     //test_bitstream<Bitstream64>();
@@ -219,7 +167,11 @@ int main()
     //test_dct_arai();
     //test_dct_matrix();
 
-    test_dcts();
+    float stretch_factor = 1.f;
+    if (argc == 2)
+        stretch_factor = std::stof(argv[1]);
+
+    test_dcts(stretch_factor);
 
     return 0;
 }

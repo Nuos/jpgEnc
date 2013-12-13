@@ -258,36 +258,38 @@ inline void dctDirect(const matrix_range<matrix<PixelDataType>>& X, matrix_range
     }
 }
 
+const auto blocksize = 8U;
+// Matrix A
+static const matrix<PixelDataType> A = [](){
+    const auto PI = pi<PixelDataType>();
+    const auto N = blocksize;
+    const auto Ntimes2 = (2.*N);
+    const auto scale = sqrt(2. / N);
+    const auto C0 = [](unsigned int row) -> PixelDataType { return row == 0 ? 1. / root_two<PixelDataType>() : 1.; };
+
+    matrix<PixelDataType> A(blocksize, blocksize);
+    for (auto k = 0U; k < blocksize; ++k) {
+        for (auto n = 0U; n < blocksize; ++n) {
+            auto cos_term = (2.*n + 1.) * ((k * PI) / Ntimes2);
+            A(k, n) = C0(k) * scale * cos(cos_term);
+        }
+    };
+    return A;
+}();
+static const auto A_transpose = trans(A);
+
 inline void dctMat(const matrix_range<matrix<PixelDataType>>& X, matrix_range<matrix<PixelDataType>>& Y)
 {
-    const auto blocksize = 8U;
     assert(X.size1() == blocksize && X.size2() == blocksize);
-
-    // Matrix A
-    static const matrix<PixelDataType> A = [blocksize](){
-        const auto PI = pi<PixelDataType>();
-        const auto N = blocksize;
-        const auto Ntimes2 = (2.*N);
-        const auto scale = sqrt(2./N);
-        const auto C0 = [](unsigned int row) -> PixelDataType { return row == 0 ? 1./root_two<PixelDataType>() : 1.; };
-
-        matrix<PixelDataType> A(blocksize, blocksize);
-        for (auto k = 0U; k < blocksize; ++k) {
-            for (auto n = 0U; n < blocksize; ++n) {
-                auto cos_term = (2.*n + 1.) * ((k * PI) / Ntimes2);
-                A(k, n) = C0(k) * scale * cos(cos_term);
-            }
-        };
-        return A;
-    }();
-
-    static const auto A_transpose = trans(A);
+    assert(Y.size1() == blocksize && Y.size2() == blocksize);
+    assert(A.size1() == blocksize && A.size2() == blocksize);
+    assert(A_transpose.size1() == blocksize && A_transpose.size2() == blocksize);
 
     using mat = matrix<PixelDataType>;
 
     // Y = A * (X * A_transpose)
     mat first = prod(X, A_transpose);
-    noalias(Y) = prod(A, first);
+    noalias(Y) = mat(prod(A, first));
 }
 
 inline matrix<PixelDataType> inverseDctMat(matrix<PixelDataType> X) 
