@@ -240,7 +240,7 @@ inline void dctDirect(const matrix_range<matrix<PixelDataType>>& X, matrix_range
     assert(X.size1() == 8 && X.size2() == 8);
 
     // Size of blocks 8x8
-    PixelDataType N = 8.0;
+    uint N = 8;
 
     for (uint i = 0; i < N; ++i)
     {

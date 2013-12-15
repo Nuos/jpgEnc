@@ -31,3 +31,24 @@ Matrix Dct took 5689 ms
 	One 256x256 image: 0.568900 ms
 Arai Fast Dct took 2224 ms
 	One 256x256 image: 0.222400 ms
+
+
+
+>>> test_dcts:
+Simple Dct 5000 times took 12060 ms
+	One 256x256 image: 2.412000 ms
+Matrix Dct 20000 times took 11982 ms
+	One 256x256 image: 0.599100 ms
+Arai Fast Dct 60000 times took 13406 ms
+	One 256x256 image: 0.223433 ms
+
+
+PixelDataType N = 8.0; -> uint N = 8;
+
+>>> test_dcts:
+Simple Dct 5000 times took 6047 ms
+	One 256x256 image: 1.209400 ms
+Matrix Dct 20000 times took 11934 ms
+	One 256x256 image: 0.596700 ms
+Arai Fast Dct 60000 times took 13339 ms
+	One 256x256 image: 0.222317 ms
