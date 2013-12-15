@@ -123,8 +123,7 @@ void test_dcts(float stretch_factor)
         printf("\tOne %dx%d image: %f ms\n", img.width, img.height, duration * 1.0 / count);
     };
 
-    // Ugh! SLOOOOOW!
-    count = 220 * stretch_factor;
+    count = 2500 * stretch_factor;
 #if _DEBUG
     count /= 30;
 #endif
