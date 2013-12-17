@@ -50,7 +50,7 @@ void printMat(const matrix<T> &mat) {
     printf("\n");
 }
 
-#undef str
+#undef _str
 
 // Example testcase
 //int add(int i, int j) { return i+j; }
