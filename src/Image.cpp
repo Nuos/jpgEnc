@@ -581,7 +581,7 @@ void Image::writeJPEG(std::wstring file)
             .setCompSetup({ CompSetup::Y, CompSetup::NoSubSampling, 0,
                             CompSetup::Cb, CompSetup::Half, 1,
                             CompSetup::Cr, CompSetup::Half, 2, })
-        << DHT.setCodeData(codedata)
+        << DHT.pushCodeData(codedata, sDHT::AC, sDHT::Second)
         << EOI
         ;
 }

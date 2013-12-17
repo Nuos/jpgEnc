@@ -175,31 +175,40 @@ namespace Segment
 
     struct sDHT
     {
-        static const auto fixed_len = 19;
         const Bytes<2> marker;
         Bytes<2> len;               // Fill that! Length is without this 2-Byte length
-        Bytes<1> HT_info;           // TODO: HTinfo
-        Bytes<16> code_lengths;     // Fill that!
-        std::vector<Byte> symbols;
+        struct sHT {
+            Bytes<1> HT_info; 
+            Bytes<16> code_lengths;
+            std::vector<Byte> symbols;
+        };
+        std::vector<sHT> HTs;
+
+        enum Class { DC = 0, AC };
+        enum Destination { First = 0, Second };
 
         // defaults
         sDHT()
             : marker{ { 0xff, 0xc4 } },
-            len{ { 0, 0 } },
-            HT_info{ { 0 } },
-            code_lengths{ { 0 } },
-            symbols{ {} }
+            len{ { 0, 0 } }
         {}
 
         // setter
-        sDHT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
-        sDHT& setCodeData(vector<vector<int>> &codelength_symbols) {
+        sDHT& pushCodeData(vector<vector<int>> &codelength_symbols, Class cls, Destination dest) {
             // codelength_symbols[0] is the symbol list with codelength 0
             // codelength_symbols[1] is the symbol list with codelength 1
             // ...
             // codelength_symbols[16] is the symbol list with codelength 16 (MAX!)
             // 
             assert(codelength_symbols.size() == 17);
+
+            HTs.resize(HTs.size() + 1);
+
+            auto& HTinfo = HTs.back().HT_info;
+            auto& symbols = HTs.back().symbols;
+            auto& code_lengths = HTs.back().code_lengths;
+
+            HTinfo.assign(((Byte)cls << 4) | (Byte)dest);
 
             // symbols with codelength 0 shouldn't be possible and the DHT segment also starts with codelength 1
             symbols.clear();
@@ -214,12 +223,12 @@ namespace Segment
             }
 
             recalcLength();
-
             return *this;
         }
-        sDHT& recalcLength() {
-            assert(symbols.size() <= 256);
-            setLen(static_cast<short>(fixed_len + symbols.size()));
+
+        sDHT& clear() {
+            HTs.clear();
+            recalcLength();
             return *this;
         }
 
@@ -227,11 +236,31 @@ namespace Segment
         friend std::ostream& operator<<(std::ostream& out, const sDHT& DHT)
         {
             const auto& segment = DHT;
-            // write fixed size portion of the segment
-            out.write((const char*)&segment, fixed_len + 2);
-            // then write the varying symbols
-            out.write((const char*)&segment.symbols[0], segment.symbols.size());
+            // write marker and length
+            out.write((const char*)&segment, 4);
+
+            // then write the HTs
+            for (const auto& HT : segment.HTs) {
+                // HT info and code length array
+                out.write((const char*)&HT, 17);
+
+                // symbols
+                out.write((const char*)&HT.symbols[0], HT.symbols.size());
+            }
             return out;
+        }
+
+    private:
+        sDHT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+        sDHT& recalcLength() {
+            auto len = 2;
+            for (const auto& HT : HTs) {
+                assert(HT.symbols.size() <= 256);
+                len += 17 + HT.symbols.size();
+            }
+            assert(len < 65536); // only 16 bit available in length field
+            setLen(static_cast<short>(len));
+            return *this;
         }
     };
     static sDHT DHT; // prefilled/predefined DHT segment
