@@ -573,8 +573,16 @@ void Image::writeJPEG(std::wstring file)
     SymbolCodeMap code_map = pair.first; // for encoding
     SymbolsPerLength codedata = pair.second;
 
+    vector<Byte> qtable, qtable_rev;
+    for (auto i = 0u; i < 64; ++i) {
+        qtable.push_back(i);
+        qtable_rev.push_back(64-i);
+    }
+
     jpeg << SOI
         << APP0
+        << DQT.pushQuantizationTable(qtable, sDQT::One)
+              .pushQuantizationTable(qtable_rev, sDQT::Zero)
         << SOF0_3c
             .setImageSizeX(width)
             .setImageSizeY(height)

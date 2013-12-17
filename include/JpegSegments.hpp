@@ -264,4 +264,69 @@ namespace Segment
         }
     };
     static sDHT DHT; // prefilled/predefined DHT segment
+
+    struct sDQT
+    {
+        const Bytes<2> marker;
+        Bytes<2> len;               // Fill that! Length is without this 2-Byte length
+        struct sQT {
+            Bytes<1> QT_info;
+            std::array<Byte, 64> coefficients;
+        };
+        std::vector<sQT> QTs;
+
+        enum Destination { Zero = 0, One, Two, Three };
+
+        // defaults
+        sDQT()
+            : marker{ { 0xff, 0xdb } },
+            len{ { 0, 0 } }
+        {}
+
+        // setter
+        sDQT& pushQuantizationTable(vector<Byte> &coefficients, Destination dest) {
+            // add new table
+            QTs.resize(QTs.size() + 1);
+            auto& QT = QTs.back();
+
+            QT.QT_info.assign((Byte)dest);
+
+            assert(coefficients.size() == 64);
+            for (auto i = 0u; i < coefficients.size(); ++i)
+                QT.coefficients.at(i) = coefficients[i];
+
+            recalcLength();
+            return *this;
+        }
+
+        sDQT& clear() {
+            QTs.clear();
+            recalcLength();
+            return *this;
+        }
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sDQT& DQT)
+        {
+            // marker and length
+            out.write((const char*)&DQT, 4);
+            // QTs
+            for (const auto& QT : DQT.QTs) {
+                out.write((const char*)&QT.QT_info, 1); // QT info
+                out.write((const char*)&QT.coefficients[0], QT.coefficients.size()); // coefficients
+            }
+
+            return out;
+        }
+
+    private:
+        sDQT& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+        sDQT& recalcLength() {
+            auto len = 2 + QTs.size() * 65;
+            assert(len < 65536); // only 16 bit available in length field
+            setLen(static_cast<short>(len));
+            return *this;
+        }
+    };
+    static sDQT DQT; // prefilled/predefined DHT segment
 }
