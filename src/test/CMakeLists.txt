@@ -11,6 +11,7 @@ set(SOURCE_FILES_UNIT_TEST
     HuffmanTest.cpp
     PackageMergeTest.cpp
     DctTest.cpp
+    CodingTest.cpp
     )
     
 set(SOURCE_FILES_PERF_TEST
