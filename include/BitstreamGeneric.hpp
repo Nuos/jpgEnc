@@ -68,6 +68,7 @@ public:
     // ctors
     Bitstream_Generic();
     Bitstream_Generic(std::initializer_list<bool> args);
+    Bitstream_Generic(uint32_t data, int number_of_bits);
 
     // appending bits / bitstreams
     Bitstream_Generic& operator<<(bool val);
@@ -75,6 +76,7 @@ public:
     Bitstream_Generic& operator<<(Bitstream_Generic<BlockType>& stream);
     Bitstream_Generic& push_back(bool val);
     Bitstream_Generic& push_back(uint32_t data, int number_of_bits);
+    Bitstream_Generic& push_back_LSB_mode(uint32_t data, int number_of_bits);
 
     // streaming
     template<typename BlockType>
@@ -112,6 +114,13 @@ Bitstream_Generic<BlockType>::Bitstream_Generic(std::initializer_list<bool> args
 : Bitstream_Generic()
 {
     *this << args;
+}
+
+template<typename BlockType>
+Bitstream_Generic<BlockType>::Bitstream_Generic(uint32_t data, int number_of_bits)
+: Bitstream_Generic()
+{
+    push_back_LSB_mode(data, number_of_bits);
 }
 
 template<typename BlockType>
@@ -175,6 +184,21 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back(uint32_t d
 {
     // append number_of_bits from MSB
     unsigned int mask = 1 << 31;
+    while (number_of_bits > 0) {
+        bool bit = (data & mask) != 0;
+        *this << bit;
+
+        --number_of_bits;
+        mask >>= 1;
+    }
+    return *this;
+}
+
+template<typename BlockType>
+Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back_LSB_mode(uint32_t data, int number_of_bits)
+{
+    // append number_of_bits from LSB
+    unsigned int mask = 1 << (number_of_bits - 1);
     while (number_of_bits > 0) {
         bool bit = (data & mask) != 0;
         *this << bit;

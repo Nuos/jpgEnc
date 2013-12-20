@@ -210,3 +210,12 @@ BOOST_AUTO_TEST_CASE(extracting_from_bitstream8)
     auto u64 = b.extractT<uint64_t>(6, 3);
     BOOST_CHECK_EQUAL(u64, 0xE400000000000000); // 1110 0100 00..0
 }
+
+BOOST_AUTO_TEST_CASE(push_back_lsb) {
+    auto b8 = Bitstream8();
+    b8.push_back_LSB_mode(4, 4); // 0100
+
+    // extracting different types
+    auto v = b8.extractT<uint8_t>(4, 0); // 0100 0000
+    BOOST_CHECK_EQUAL(v, 0x40);
+}
