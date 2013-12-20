@@ -4,6 +4,7 @@
 #include <streambuf>
 #include <sstream>
 #include <future>
+#include <omp.h>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
@@ -512,45 +513,18 @@ void Image::applyDCT(DCTMode mode)
 
     DctCb = zero_matrix<PixelDataType>(Cb.size1(), Cb.size2());
 
-    using mat_range = matrix_range<matrix<PixelDataType>>;
-    using range_pair = std::pair<const mat_range, mat_range>;
+    const auto blocksize = 8;
 
-    // make a list with work for every worker to process
-    const unsigned int worker = 4;
-    std::vector<range_pair> list[4];
-
-    // reserve some space before
-    const auto num_blocks = width/8 * height/8;
-    for (auto& vec : list)
-        vec.reserve(num_blocks/worker);
-
-    const auto blocksize = 8u;
-    unsigned int cnter = 0;
-    for (uint w = 0; w < width; w += blocksize) {
-        for (uint h = 0; h < height; h += blocksize) {
+    omp_set_num_threads(4); // can also be set via an environment variable
+    #pragma omp parallel for
+    for (int w = 0; w < width; w += blocksize) {
+        for (int h = 0; h < height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(w, w+blocksize), range(h, h+blocksize));
             matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(w, w+blocksize), range(h, h+blocksize));
-
-            list[cnter].emplace_back(std::make_pair(slice_src, slice_dst));
-            (++cnter) %= worker; 
+            dctFn(slice_src, slice_dst);
         }
     }
-
-    auto workerFunc = [dctFn](std::vector<range_pair> &list) {
-        for (auto& elem : list) {
-            const auto& src = elem.first;
-            auto& dst = elem.second;
-
-            dctFn(src, dst);
-        }
-    };
-
-    std::vector<std::future<void>> fts;
-    for (auto i = 0U; i < worker; ++i)
-        fts.emplace_back(std::async(workerFunc, list[i])); // launch the worker asynchronous
-    for (auto& future : fts)
-        future.get(); // waits until all threads are finished
 }
 
 void Image::writeJPEG(std::wstring file)

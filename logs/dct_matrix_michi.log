@@ -52,3 +52,12 @@ Matrix Dct 20000 times took 11934 ms
 	One 256x256 image: 0.596700 ms
 Arai Fast Dct 60000 times took 13339 ms
 	One 256x256 image: 0.222317 ms
+
+added openmp
+>>> test_dcts:
+Simple Dct 5000 times took 5625 ms
+	One 256x256 image: 1.125000 ms
+Matrix Dct 10000 times took 5264 ms
+	One 256x256 image: 0.526400 ms
+Arai Fast Dct 30000 times took 3735 ms
+	One 256x256 image: 0.124500 ms
