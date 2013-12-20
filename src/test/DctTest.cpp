@@ -4,6 +4,7 @@
 #include "Dct.hpp"
 
 using mat = matrix<PixelDataType>;
+using mat_byte = matrix<int8_t>;
 
 std::vector<PixelDataType> zigzag(mat m) {
     std::vector<PixelDataType> r;
@@ -35,6 +36,21 @@ std::vector<PixelDataType> zigzag(mat m) {
 
     return r;
 };
+
+mat_byte quantize(const mat& m, const mat& table) {
+    assert(m.size1() == 8);
+    assert(m.size2() == 8);
+    assert(table.size1() == 8);
+    assert(table.size2() == 8);
+
+    mat_byte result(8, 8);
+
+    for (uint i = 0; i < 64; ++i) {
+        result.data()[i] = static_cast<int8_t>(std::round(m.data()[i] / table.data()[i]));
+    }
+
+    return result;
+}
 
 mat from_vector(const std::vector<PixelDataType>& v) {
     assert(v.size() == 64);
@@ -148,4 +164,53 @@ BOOST_AUTO_TEST_CASE(zigzag_test) {
         63, 64};
 
     BOOST_CHECK_EQUAL_COLLECTIONS(begin(exp), end(exp), begin(v), end(v));
+}
+
+
+BOOST_AUTO_TEST_CASE(quantization) {
+    const auto y_table = from_vector({
+        16, 11, 10, 16,  24,  40,  51,  61,
+        12, 12, 14, 19,  26,  58,  60,  55,
+        14, 13, 16, 24,  40,  57,  69,  56,
+        14, 17, 22, 29,  51,  87,  80,  62,
+        18, 22, 37, 56,  68, 109, 103,  77,
+        24, 35, 55, 64,  81, 104, 113,  92,
+        49, 64, 78, 87, 103, 121, 120, 101,
+        72, 92, 95, 98, 112, 100, 103,  99
+    });
+    const auto c_table = from_vector({
+        17, 18, 24, 47, 99, 99, 99, 99,
+        18, 21, 26, 66, 99, 99, 99, 99,
+        24, 26, 56, 99, 99, 99, 99, 99,
+        47, 66, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99
+    });
+
+    auto input = from_vector({
+        581, -144, 56, 17, 15, -7, 25, -9,
+        -242, 133, -48, 42, -2, -7, 13, -4,
+        108, -18, -40, 71, -33, 12, 6, -10,
+        -56, -93, 48, 19, -8, 7, 6, -2,
+        -17, 9, 7, -23, -3, -10, 5, 3,
+        4, 9, -4, -5, 2, 2, -7, 3,
+        -9, 7, 8, -6, 5, 12, 2, -5,
+        -9, -4, -2, -3, 6, 1, -1, -1
+    });
+
+    auto true_result = from_vector({
+        36, -13, 6, 1, 1, 0, 0, 0,
+        -20, 11, -3, 2, 0, 0, 0, 0,
+        8, -1, -3, 3, -1, 0, 0, 0,
+        -4, -5, 2, 1, 0, 0, 0, 0,
+        -1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0
+    });
+
+    mat_byte result = quantize(input, y_table);
+    CHECK_EQUAL_MAT(result, true_result);
 }
