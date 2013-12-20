@@ -120,9 +120,9 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                     auto& g = G.data()[x];
                     auto& b = B.data()[x];
 
-                    converted.Y.data()[x]  = Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b) + 128;
-                    converted.Cb.data()[x] = Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b) + 128;
-                    converted.Cr.data()[x] = Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b) + 128;
+                    converted.Y.data()[x]  = Flat[0] + (Yv[0] * r + Yv[1] * g + Yv[2] * b) - 128;
+                    converted.Cb.data()[x] = Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b) - 128;
+                    converted.Cr.data()[x] = Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b) - 128;
                 }
             }
             break;
@@ -146,9 +146,9 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                     auto cb = Cb.data()[x] - Flat[1];
                     auto cr = Cr.data()[x] - Flat[2];
 
-                    converted.Y.data()[x] =  r[0] * y + r[1] * cb + r[2] * cr - 128;
-                    converted.Cb.data()[x] = g[0] * y + g[1] * cb + g[2] * cr - 128;
-                    converted.Cr.data()[x] = b[0] * y + b[1] * cb + b[2] * cr - 128;
+                    converted.Y.data()[x] =  r[0] * y + r[1] * cb + r[2] * cr + 128;
+                    converted.Cb.data()[x] = g[0] * y + g[1] * cb + g[2] * cr + 128;
+                    converted.Cr.data()[x] = b[0] * y + b[1] * cb + b[2] * cr + 128;
                 }
             }
             break;
