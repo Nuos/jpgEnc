@@ -4,7 +4,6 @@
 #include "Dct.hpp"
 
 using mat = matrix<PixelDataType>;
-using mat_byte = matrix<int8_t>;
 
 std::vector<PixelDataType> zigzag(mat m) {
     std::vector<PixelDataType> r;
@@ -37,13 +36,13 @@ std::vector<PixelDataType> zigzag(mat m) {
     return r;
 };
 
-mat_byte quantize(const mat& m, const mat& table) {
+matrix<int> quantize(const mat& m, const mat& table) {
     assert(m.size1() == 8);
     assert(m.size2() == 8);
     assert(table.size1() == 8);
     assert(table.size2() == 8);
 
-    mat_byte result(8, 8);
+    matrix<int> result(8, 8);
 
     for (uint i = 0; i < 64; ++i) {
         result.data()[i] = static_cast<int8_t>(std::round(m.data()[i] / table.data()[i]));
@@ -211,6 +210,6 @@ BOOST_AUTO_TEST_CASE(quantization) {
         0, 0, 0, 0, 0, 0, 0, 0
     });
 
-    mat_byte result = quantize(input, y_table);
+    auto result = quantize(input, y_table);
     CHECK_EQUAL_MAT(result, true_result);
 }
