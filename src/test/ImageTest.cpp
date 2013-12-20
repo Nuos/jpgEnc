@@ -48,19 +48,20 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195);
-    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
-    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
+    auto v = YCbCr_image.Y(0, 3);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195 + 128);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695 + 128);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805 + 128);
 
-    CHECK_CLOSE(YCbCr_image. Y(1, 1), 9.6030);
-    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.532);
-    CHECK_CLOSE(YCbCr_image.Cr(1, 1), 121.1519);
+    CHECK_CLOSE(YCbCr_image. Y(1, 1), 9.6030 + 128);
+    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.532 + 128);
+    CHECK_CLOSE(YCbCr_image.Cr(1, 1), 121.1519 + 128);
 
     // converting from YCbCr to YCbCr doesn't do a thing!
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195);
-    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695);
-    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195 + 128);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695 + 128);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805 + 128);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
     CHECK_CLOSE(rgb_image.R(0, 3), 15);

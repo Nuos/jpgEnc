@@ -10,7 +10,7 @@ using boost::numeric::ublas::matrix;
 
 // check if two floating point numbers are equal to the 5th digit
 const auto delta = .00001;
-#define CHECK_CLOSE(left, right) if (abs(left - right) >= delta) BOOST_ERROR(_t_str(left) + " not close to " + _t_str(right) + " (delta: " + _t_str(delta) + ")")
+#define CHECK_CLOSE(left, right) if (abs((left) - (right)) >= delta) BOOST_ERROR(_t_str(left) + " not close to " + _t_str(right) + " (delta: " + _t_str(delta) + ")")
 
 #define CHECK_EQUAL_MAT(left, right) { \
     bool size_equal = left.size1() == right.size1() && left.size2() == right.size2(); \
