@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
     // writing dummy image segments
     {
-        auto img = loadPPM("res/tester_p3.ppm");
+        auto img = loadPPM("res/tester_DC.ppm");
         img.writeJPEG(L"abc.jpeg");
     }
 

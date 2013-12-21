@@ -69,14 +69,14 @@ inline matrix<int> quantize(const mat& m, const mat& table) {
     matrix<int> result(8, 8);
 
     for (uint i = 0; i < 64; ++i) {
-        result.data()[i] = static_cast<int8_t>(std::round(m.data()[i] / table.data()[i]));
+        result.data()[i] = static_cast<int>(std::round(m.data()[i] / table.data()[i]));
     }
 
     return result;
 }
 
 struct RLE_PAIR {
-    short num_zeros_before : 4;
+    unsigned short num_zeros_before : 4;
     int value;
 
     RLE_PAIR(short zeros, int _value) : num_zeros_before(zeros), value(_value) { assert(zeros <= 16); }
@@ -100,13 +100,15 @@ inline std::vector<RLE_PAIR> RLE_AC(const std::vector<int> &data) {
 
         if (value == 0) {
             ++zero_counter;
-            if (zero_counter > 15) {
-                AC_rle.push_back(RLE_PAIR(15, 0));
-                zero_counter = 0;
-            }
             continue;
         }
         else {
+            if (zero_counter > 15) {
+                do {
+                    AC_rle.push_back(RLE_PAIR(15, 0));
+                    zero_counter -= 16;
+                } while (zero_counter > 15);
+            }
             AC_rle.push_back(RLE_PAIR(zero_counter, value));
             zero_counter = 0;
         }

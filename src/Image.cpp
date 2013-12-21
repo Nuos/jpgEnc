@@ -787,7 +787,6 @@ void Image::writeJPEG(std::wstring file)
     jpeg << SOI
         << APP0
         << DQT.pushQuantizationTable(zigzag_qtable, sDQT::Zero)
-              //.pushQuantizationTable(zigzag_qtable, sDQT::One)
         << SOF0_3c
             .setImageSizeX(width)
             .setImageSizeY(height)
