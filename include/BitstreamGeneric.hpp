@@ -213,7 +213,8 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back_LSB_mode(u
 template<typename BlockType>
 std::ostream& operator<<(std::ostream& out, const Bitstream_Generic<BlockType>& bitstream)
 {
-    out.write((const char*)&bitstream.blocks[0], sizeof(BlockType)*bitstream.blocks.size());
+    if (bitstream.sz > 0)
+        out.write((const char*)&bitstream.blocks[0], sizeof(BlockType)*bitstream.blocks.size());
     return out;
 }
 

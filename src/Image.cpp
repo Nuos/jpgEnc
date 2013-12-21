@@ -782,21 +782,27 @@ void Image::writeJPEG(std::wstring file)
   
     auto zigzag_qtable = zigzag<Byte>(quantization_table);
 
+    Bitstream stream;
+
     jpeg << SOI
         << APP0
         << DQT.pushQuantizationTable(zigzag_qtable, sDQT::Zero)
-              .pushQuantizationTable(zigzag_qtable, sDQT::One)
+              //.pushQuantizationTable(zigzag_qtable, sDQT::One)
         << SOF0_3c
             .setImageSizeX(width)
             .setImageSizeY(height)
             .setCompSetup({ CompSetup::Y,  CompSetup::NoSubSampling, 0,
-                            CompSetup::Cb, CompSetup::NoSubSampling, 1,
-                            CompSetup::Cr, CompSetup::NoSubSampling, 2, })
+                            CompSetup::Cb, CompSetup::NoSubSampling, 0,
+                            CompSetup::Cr, CompSetup::NoSubSampling, 0 })
         << DHT.pushCodeData(DC_Huffman_Table, sDHT::DC, sDHT::First)
               .pushCodeData(AC_Huffman_Table, sDHT::AC, sDHT::First)
-              .pushCodeData(DC_Huffman_Table, sDHT::DC, sDHT::Second)
-              .pushCodeData(AC_Huffman_Table, sDHT::AC, sDHT::Second)
-        << EOI
+        << SOS
         ;
+
+    for (auto i = 0U; i < BitstreamY.size(); ++i) {
+        jpeg << BitstreamY[i] << BitstreamCb[i] << BitstreamCr[i];
+    }
+
+    jpeg << EOI;
 }
 

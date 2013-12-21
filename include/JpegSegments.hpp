@@ -184,8 +184,8 @@ namespace Segment
         };
         std::vector<sHT> HTs;
 
-        enum Class { DC = 0, AC };
-        enum Destination { First = 0, Second };
+        enum Class : Byte { DC = 0, AC };
+        enum Destination : Byte { First = 0, Second };
 
         // defaults
         sDHT()
@@ -329,4 +329,39 @@ namespace Segment
         }
     };
     static sDQT DQT; // prefilled/predefined DHT segment
+
+    struct sSOS
+    {
+        const Bytes<2> marker;
+        Bytes<2> len;
+        Bytes<1> num_components;
+        Bytes<6> component_setup;
+        Bytes<3> blubb;
+
+        // defaults
+        sSOS()
+            : marker{ { 0xff, 0xda } },
+            len{ { 0, 0 } },
+            num_components{ { 3 } },
+            component_setup{ {
+                CompSetup::Y, (sDHT::First << 4) | sDHT::First,
+                CompSetup::Cb, (sDHT::First << 4) | sDHT::First,
+                CompSetup::Cr, (sDHT::First << 4) | sDHT::First,
+            } },
+            blubb{ { 0x0, 0x3f, 0x0 } }
+        {
+            setLen(6 + 2 * 3);
+        }
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sSOS& SOS)
+        {
+            out.write((const char*)&SOS, 14);
+            return out;
+        }
+
+    private:
+        sSOS& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
+    };
+    static sSOS SOS; // prefilled/predefined DHT segment
 }
