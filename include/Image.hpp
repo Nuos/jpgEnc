@@ -13,6 +13,8 @@
 
 #include <boost/numeric/ublas/matrix.hpp>
 
+#include "Coding.hpp"
+
 typedef unsigned int uint;
 typedef uint8_t Byte;
 typedef double PixelDataType;
@@ -88,6 +90,7 @@ private:
     // ACCESSORS
 public:
     uint width, height;
+    uint subsample_width, subsample_height;
     matrix<PixelDataType> &R, &G, &B;
     matrix<PixelDataType> &Y, &Cb, &Cr;
 
@@ -96,4 +99,8 @@ private:
     ColorSpace color_space_type;
     matrix<PixelDataType> one, two, three;
     matrix<PixelDataType> DctY, DctCb, DctCr;
+    matrix<int> QY, QCb, QCr;
+    std::vector<std::vector<int>> ZigZagY, ZigZagCb, ZigZagCr;
+    std::vector<std::vector<Category_Code>> CategoryCodeY, CategoryCodeCb, CategoryCodeCr;
+    std::vector<Bitstream> BitstreamY, BitstreamCb, BitstreamCr;
 };

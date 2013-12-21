@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
     // writing dummy image segments
     {
-        Image img(4, 4, Image::RGB);
+        auto img = loadPPM("res/tester_p3.ppm");
         img.writeJPEG(L"abc.jpeg");
     }
 

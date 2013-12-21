@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include <ostream>
 #include <istream>
-#include <assert.h>
+#include <cassert>
 
 // Bitstream_Generic[0] is the least significant bit (LSB)
 // Bitsream[Bitstream_Generic.size()-1] is the most significant bit (MSB)
