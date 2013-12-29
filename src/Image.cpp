@@ -385,30 +385,30 @@ private:
 };
 
 // load a ppm file into an RGBImage
-void loadP3PPM(PPMFileBuffer& file, Image& img) {
+void loadP3PPM(PPMFileBuffer& file, Image& img, double scale_factor) {
     std::string buf;
     buf.reserve(32);
 
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
         file.read_word(buf);
-        img.R.data()[x] = fast_atoi(buf.c_str());
+        img.R.data()[x] = fast_atoi(buf.c_str()) * scale_factor;
 
         file.read_word(buf);
-        img.G.data()[x] = fast_atoi(buf.c_str());
+        img.G.data()[x] = fast_atoi(buf.c_str()) * scale_factor;
 
         file.read_word(buf);
-        img.B.data()[x] = fast_atoi(buf.c_str());
+        img.B.data()[x] = fast_atoi(buf.c_str()) * scale_factor;
     }
 }
 
 // Needs the ifstream opened as binary!
-void loadP6PPM(PPMFileBuffer& ppm, Image& img) {
+void loadP6PPM(PPMFileBuffer& ppm, Image& img, double scale_factor) {
     const auto max = img.width * img.height;
     for (auto x = 0U; x < max; ++x) {
-        img.R.data()[x] = ppm.read_byte();
-        img.G.data()[x] = ppm.read_byte();
-        img.B.data()[x] = ppm.read_byte();
+        img.R.data()[x] = ppm.read_byte() * scale_factor;
+        img.G.data()[x] = ppm.read_byte() * scale_factor;
+        img.B.data()[x] = ppm.read_byte() * scale_factor;
     }
 }
 
@@ -454,13 +454,17 @@ Image loadPPM(std::string path) {
 
     assert((max_color < 256) && "Only 1 byte colors supported for now!");
 
+    // scale according to max_color (if max_color is 15 -> white is 15! that means we have to scale that up to 255)
+    auto scale_factor = 255. / max_color;
+
     Image img(width, height, Image::RGB);
 
     if (magic == "P3")
-        loadP3PPM(ppm, img);
+        loadP3PPM(ppm, img, scale_factor);
     else if (magic == "P6") {
-        loadP6PPM(ppm, img);
+        loadP6PPM(ppm, img, scale_factor);
     }
+
 
     img.real_height = img.height;
     img.real_width = img.width;

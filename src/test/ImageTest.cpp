@@ -10,26 +10,26 @@ BOOST_AUTO_TEST_CASE(image_loading_test) {
     BOOST_CHECK(image.G(0, 0) == 0);
     BOOST_CHECK(image.B(0, 0) == 0);
 
-    BOOST_CHECK(image.R(0, 3) == 15);
+    BOOST_CHECK(image.R(0, 3) == 255);
     BOOST_CHECK(image.G(0, 3) == 0);
-    BOOST_CHECK(image.B(0, 3) == 15);
+    BOOST_CHECK(image.B(0, 3) == 255);
 
     BOOST_CHECK(image.R(2, 2) == 0);
-    BOOST_CHECK(image.G(2, 2) == 15);
-    BOOST_CHECK(image.B(2, 2) == 7);
+    BOOST_CHECK(image.G(2, 2) == 255);
+    BOOST_CHECK(image.B(2, 2) == 119);
 
     BOOST_CHECK(image.R(0, 0) == 0);
     BOOST_CHECK(image.G(0, 0) == 0);
     BOOST_CHECK(image.B(0, 0) == 0);
 
     // out of bounds indexing
-    BOOST_CHECK(image.R(7, 0) == 15);
+    BOOST_CHECK(image.R(7, 0) == 255);
     BOOST_CHECK(image.G(7, 0) == 0);
-    BOOST_CHECK(image.B(7, 0) == 15);
+    BOOST_CHECK(image.B(7, 0) == 255);
 
-    BOOST_CHECK(image.R(0, 7) == 15);
+    BOOST_CHECK(image.R(0, 7) == 255);
     BOOST_CHECK(image.G(0, 7) == 0);
-    BOOST_CHECK(image.B(0, 7) == 15);
+    BOOST_CHECK(image.B(0, 7) == 255);
 
     BOOST_CHECK(image.R(1, 7) == 0);
     BOOST_CHECK(image.G(1, 7) == 0);
@@ -48,28 +48,28 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195 - 128);
-    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695 - 128);
-    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805 - 128);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), -22.685);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 84.4815);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 106.7685);
 
-    CHECK_CLOSE(YCbCr_image. Y(1, 1), 9.6030 - 128);
-    CHECK_CLOSE(YCbCr_image.Cb(1, 1), 126.532 - 128);
-    CHECK_CLOSE(YCbCr_image.Cr(1, 1), 121.1519 - 128);
+    CHECK_CLOSE(YCbCr_image.Y(1, 1), 35.251);
+    CHECK_CLOSE(YCbCr_image.Cb(1, 1), -24.956);
+    CHECK_CLOSE(YCbCr_image.Cr(1, 1), -116.417698);
 
     // converting from YCbCr to YCbCr doesn't do a thing!
     YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195 - 128);
-    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695 - 128);
-    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805 - 128);
+    CHECK_CLOSE(YCbCr_image.Y(0, 3), -22.685);
+    CHECK_CLOSE(YCbCr_image.Cb(0, 3), 84.4815);
+    CHECK_CLOSE(YCbCr_image.Cr(0, 3), 106.7685);
 
     auto rgb_image = image.convertToColorSpace(Image::RGB);
-    CHECK_CLOSE(rgb_image.R(0, 3), 15);
+    CHECK_CLOSE(rgb_image.R(0, 3), 255);
     CHECK_CLOSE(rgb_image.G(0, 3), 0);
-    CHECK_CLOSE(rgb_image.B(0, 3), 15);
+    CHECK_CLOSE(rgb_image.B(0, 3), 255);
 
     CHECK_CLOSE(rgb_image.R(1, 1), 0);
-    CHECK_CLOSE(rgb_image.G(1, 1), 15);
-    CHECK_CLOSE(rgb_image.B(1, 1), 7);
+    CHECK_CLOSE(rgb_image.G(1, 1), 255);
+    CHECK_CLOSE(rgb_image.B(1, 1), 119);
 }
 
 BOOST_AUTO_TEST_CASE(image_subsampling_test)
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0 7
         // 15 0
         BOOST_CHECK_EQUAL(image.B(2, 0), 0);
-        BOOST_CHECK_EQUAL(image.B(2, 1), 7);
-        BOOST_CHECK_EQUAL(image.B(3, 0), 15);
+        BOOST_CHECK_EQUAL(image.B(2, 1), 119);
+        BOOST_CHECK_EQUAL(image.B(3, 0), 255);
         BOOST_CHECK_EQUAL(image.B(3, 1), 0);
 
         // G channel:
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0 15
         // 0 0
         BOOST_CHECK_EQUAL(image.G(2, 0), 0);
-        BOOST_CHECK_EQUAL(image.G(2, 1), 15);
+        BOOST_CHECK_EQUAL(image.G(2, 1), 255);
         BOOST_CHECK_EQUAL(image.G(3, 0), 0);
     }
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0
         // 15
         BOOST_CHECK_EQUAL(image.B(2, 0), 0);
-        BOOST_CHECK_EQUAL(image.B(3, 0), 15);
+        BOOST_CHECK_EQUAL(image.B(3, 0), 255);
 
         // G channel:
         // 0
@@ -142,13 +142,13 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 0 0
         // 0 7
         BOOST_CHECK_EQUAL(image.B(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.B(1, 1), 7);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 119);
 
         // G channel:
         // 0 0
         // 0 15
         BOOST_CHECK_EQUAL(image.G(1, 0), 0);
-        BOOST_CHECK_EQUAL(image.G(1, 1), 15);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 255);
     }
 
     {
@@ -160,18 +160,18 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // B channel:
         // 1.75 3.75
         // 3.75 1.75
-        BOOST_CHECK_EQUAL(image.B(0, 0), 1.75);
-        BOOST_CHECK_EQUAL(image.B(1, 0), 3.75);
-        BOOST_CHECK_EQUAL(image.B(0, 1), 3.75);
-        BOOST_CHECK_EQUAL(image.B(1, 1), 1.75);
+        BOOST_CHECK_EQUAL(image.B(0, 0), 29.75);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 63.75);
+        BOOST_CHECK_EQUAL(image.B(0, 1), 63.75);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 29.75);
 
         // G channel:
         // 3.75 0
         // 0    3.75
-        BOOST_CHECK_EQUAL(image.G(0, 0), 3.75);
+        BOOST_CHECK_EQUAL(image.G(0, 0), 63.75);
         BOOST_CHECK_EQUAL(image.G(1, 0), 0);
         BOOST_CHECK_EQUAL(image.G(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.G(1, 1), 3.75);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 63.75);
     }
 
     {
@@ -185,8 +185,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         // 7.5 3.5
         BOOST_CHECK_EQUAL(image.B(0, 0), 0);
         BOOST_CHECK_EQUAL(image.B(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.B(1, 0), 7.5);
-        BOOST_CHECK_EQUAL(image.B(1, 1), 3.5);
+        BOOST_CHECK_EQUAL(image.B(1, 0), 127.5);
+        BOOST_CHECK_EQUAL(image.B(1, 1), 59.5);
 
         // G channel:
         // 0 0
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
         BOOST_CHECK_EQUAL(image.G(0, 0), 0);
         BOOST_CHECK_EQUAL(image.G(1, 0), 0);
         BOOST_CHECK_EQUAL(image.G(0, 1), 0);
-        BOOST_CHECK_EQUAL(image.G(1, 1), 7.5);
+        BOOST_CHECK_EQUAL(image.G(1, 1), 127.5);
     }
 }
 
@@ -261,8 +261,17 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
         img = loadPPM("res/tester_p3.ppm");
         img.writeJPEG(L"tester_p3_4x4_own_encoder.jpg");
 
+        img = loadPPM("res/tester_p3_8x8.ppm");
+        img.writeJPEG(L"tester_p3_8x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_p3_12x8.ppm");
+        img.writeJPEG(L"tester_p3_12x8_own_encoder.jpg");
+
         img = loadPPM("res/tester_green_12x8.ppm");
         img.writeJPEG(L"tester_green_12x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_green_blue_12x8.ppm");
+        img.writeJPEG(L"tester_green_blue_12x8_own_encoder.jpg");
     }
 
     // writing draigoch jpeg segments
