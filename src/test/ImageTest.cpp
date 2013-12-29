@@ -272,13 +272,21 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
         img = loadPPM("res/tester_green_blue_12x8.ppm");
         img.writeJPEG(L"tester_green_blue_12x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_green_blue_8x12.ppm");
+        img.writeJPEG(L"tester_green_blue_8x12_own_encoder.jpg");
+
+        img = loadPPM("res/tester_RGB_26x19.ppm");
+        img.writeJPEG(L"tester_RGB_26x19_own_encoder.jpg");
     }
 
+#if NDEBUG
     // writing draigoch jpeg segments
-    //{
-    //    auto image = loadPPM("res/Draigoch_p6.ppm");
-    //    image.writeJPEG(L"Draigoch.jpeg");
-    //}
+    {
+        auto image = loadPPM("res/Draigoch_p6.ppm");
+        image.writeJPEG(L"Draigoch.jpeg");
+    }
+#endif
 
     // setting segment data
     {

@@ -15,6 +15,7 @@
 
 using boost::numeric::ublas::matrix_range;
 using boost::numeric::ublas::range;
+using boost::numeric::ublas::subrange;
 using boost::numeric::ublas::zero_matrix;
 
 static const auto debug = false;
@@ -552,8 +553,8 @@ void Image::applyDCT(DCTMode mode)
     DctCr = zero_matrix<PixelDataType>(Cr.size1(), Cr.size2());
 
 #pragma omp parallel for
-    for (int w = 0; w < width; w += blocksize) {
-        for (int h = 0; h < height; h += blocksize) {
+    for (int h = 0; h < height; h += blocksize) {
+        for (int w = 0; w < width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(Y, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<PixelDataType>> slice_dst(DctY, range(h, h + blocksize), range(w, w + blocksize));
@@ -562,8 +563,8 @@ void Image::applyDCT(DCTMode mode)
     }
 
 #pragma omp parallel for
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(h, h + blocksize), range(w, w + blocksize));
@@ -572,8 +573,8 @@ void Image::applyDCT(DCTMode mode)
     }
 
 #pragma omp parallel for
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(Cr, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<PixelDataType>> slice_dst(DctCr, range(h, h + blocksize), range(w, w + blocksize));
@@ -590,8 +591,9 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
     QCb = zero_matrix<int>(DctCb.size1(), DctCb.size2());
     QCr = zero_matrix<int>(DctCr.size1(), DctCr.size2());
 
-    for (int w = 0; w < width; w += blocksize) {
-        for (int h = 0; h < height; h += blocksize) {
+#pragma omp parallel for
+    for (int h = 0; h < height; h += blocksize) {
+        for (int w = 0; w < width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctY, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QY, range(h, h + blocksize), range(w, w + blocksize));
@@ -599,8 +601,9 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
         }
     }
 
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+#pragma omp parallel for
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctCb, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QCb, range(h, h + blocksize), range(w, w + blocksize));
@@ -608,8 +611,9 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
         }
     }
 
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+#pragma omp parallel for
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctCr, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QCr, range(h, h + blocksize), range(w, w + blocksize));
@@ -620,8 +624,8 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
 
 void Image::applyDCdifferenceCoding() {
     int b = 0;
-    for (int w = 0; w < width; w += blocksize) {
-        for (int h = 0; h < height; h += blocksize) {
+    for (int h = 0; h < height; h += blocksize) {
+        for (int w = 0; w < width; w += blocksize) {
             auto tmp = QY(h, w);
             QY(h, w) = tmp - b;
             b = tmp;
@@ -629,8 +633,8 @@ void Image::applyDCdifferenceCoding() {
     }
 
     b = 0;
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             auto tmp = QCb(h, w);
             QCb(h, w) = tmp - b;
             b = tmp;
@@ -638,8 +642,8 @@ void Image::applyDCdifferenceCoding() {
     }
 
     b = 0;
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             auto tmp = QCr(h, w);
             QCr(h, w) = tmp - b;
             b = tmp;
@@ -656,26 +660,26 @@ void Image::doZigZagSorting() {
     ZigZagCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
     ZigZagCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
 
-    for (int w = 0; w < width; w += blocksize) {
-        for (int h = 0; h < height; h += blocksize) {
+    for (int h = 0; h < height; h += blocksize) {
+        for (int w = 0; w < width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QY, range(h, h + blocksize), range(w, w + blocksize));
+            const auto slice_src = subrange(QY, h, h + blocksize, w, w + blocksize);
             ZigZagY.push_back(zigzag<int>(slice_src));
         }
     }
 
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QCb, range(h, h + blocksize), range(w, w + blocksize));
+            const auto slice_src = subrange(QCb, h, h + blocksize, w, w + blocksize);
             ZigZagCb.push_back(zigzag<int>(slice_src));
         }
     }
 
-    for (int w = 0; w < subsample_width; w += blocksize) {
-        for (int h = 0; h < subsample_height; h += blocksize) {
+    for (int h = 0; h < subsample_height; h += blocksize) {
+        for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QCr, range(h, h + blocksize), range(w, w + blocksize));
+            const auto slice_src = subrange(QCr, h, h + blocksize, w, w + blocksize);
             ZigZagCr.push_back(zigzag<int>(slice_src));
         }
     }
