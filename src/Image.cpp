@@ -721,7 +721,7 @@ void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
         for (auto it = begin(data) + 1; it != end(data); ++it) {
             auto& code = *it;
             auto encoded_AC = Y_AC[code.symbol];
-            stream.push_back(encoded_DC.code, encoded_DC.length);
+            stream.push_back(encoded_AC.code, encoded_AC.length);
             stream << code.code;
         }
 
