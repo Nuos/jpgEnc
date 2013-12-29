@@ -12,7 +12,6 @@
 
 #include "JpegSegments.hpp"
 #include "Dct.hpp"
-#include "Huffman.hpp"
 
 using boost::numeric::ublas::matrix_range;
 using boost::numeric::ublas::range;
@@ -27,6 +26,7 @@ static const auto debug = false;
 Image::Image(uint w, uint h, ColorSpace color)
     : color_space_type(color),
     width(w), height(h),
+    real_width(w), real_height(h),
     subsample_width(w), subsample_height(h),
     one(h, w), two(h, w), three(h, w),
     Y(one), Cb(two), Cr(three),
@@ -39,6 +39,7 @@ Image::Image(uint w, uint h, ColorSpace color)
 Image::Image(const Image& other)
     : color_space_type(other.color_space_type),
     width(other.width), height(other.height),
+    real_width(other.real_width), real_height(other.real_height),
     subsample_width(other.subsample_width), subsample_height(other.subsample_height),
     one(other.one), two(other.two), three(other.three),
     Y(one), Cb(two), Cr(three),
@@ -51,6 +52,7 @@ Image::Image(const Image& other)
 Image::Image(Image&& other)
     : color_space_type(other.color_space_type),
     width(other.width), height(other.height),
+    real_width(other.real_width), real_height(other.real_height),
     subsample_width(other.subsample_width), subsample_height(other.subsample_height),
     one(std::move(other.one)), two(std::move(other.two)), three(std::move(other.three)),
     Y(one), Cb(two), Cr(three),
@@ -74,6 +76,8 @@ Image& Image::operator = (const Image &other) {
         three = other.three;
         width = other.width;
         height = other.height;
+        real_width = other.real_width;
+        real_height = other.real_height;
         subsample_width = other.subsample_width;
         subsample_height = other.subsample_height;
         color_space_type = other.color_space_type;
@@ -90,6 +94,8 @@ Image& Image::operator=(Image &&other) {
         three = std::move(other.three);
         width = other.width;
         height = other.height;
+        real_width = other.real_width;
+        real_height = other.real_height;
         subsample_width = other.subsample_width;
         subsample_height = other.subsample_height;
         color_space_type = other.color_space_type;
@@ -131,6 +137,8 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                     converted.Cb.data()[x] = Flat[1] + (Cb[0] * r + Cb[1] * g + Cb[2] * b) - 128;
                     converted.Cr.data()[x] = Flat[2] + (Cr[0] * r + Cr[1] * g + Cr[2] * b) - 128;
                 }
+
+                converted.color_space_type = ColorSpace::YCbCr;
             }
             break;
         case ColorSpace::RGB:
@@ -149,14 +157,16 @@ Image Image::convertToColorSpace(ColorSpace target_color_space) const {
                 static const float b[] {  1.f, 1.772f,   .0f };
 
                 for (uint x = 0; x < num_pixel; ++x) {
-                    auto y  =  Y.data()[x] - Flat[0];
-                    auto cb = Cb.data()[x] - Flat[1];
-                    auto cr = Cr.data()[x] - Flat[2];
+                    auto y  =  Y.data()[x] + 128;
+                    auto cb = Cb.data()[x] + 128;
+                    auto cr = Cr.data()[x] + 128;
 
-                    converted.Y.data()[x] =  r[0] * y + r[1] * cb + r[2] * cr + 128;
-                    converted.Cb.data()[x] = g[0] * y + g[1] * cb + g[2] * cr + 128;
-                    converted.Cr.data()[x] = b[0] * y + b[1] * cb + b[2] * cr + 128;
+                    converted.R.data()[x] = (r[0] * y + r[1] * cb + r[2] * cr);
+                    converted.G.data()[x] = (g[0] * y + g[1] * cb + g[2] * cr);
+                    converted.B.data()[x] = (b[0] * y + b[1] * cb + b[2] * cr);
                 }
+
+                converted.color_space_type = ColorSpace::RGB;
             }
             break;
     }
@@ -434,10 +444,10 @@ Image loadPPM(std::string path) {
 
     // width and height
     ppm.read_word(buf);
-    auto width = std::stoi(buf);
+    uint width = std::stoi(buf);
 
     ppm.read_word(buf);
-    auto height = std::stoi(buf);
+    uint height = std::stoi(buf);
 
     ppm.read_word(buf);
     auto max_color = std::stoi(buf);
@@ -452,11 +462,20 @@ Image loadPPM(std::string path) {
         loadP6PPM(ppm, img);
     }
 
+    img.real_height = img.height;
+    img.real_width = img.width;
+
     //adjust size of our image for using 8x8 blocks
     if (width % 8 != 0 || height % 8 != 0)
     {
-        img.width = (width + 8) - (width % 8);
-        img.height  = (height + 8) - (height % 8);
+        if (img.width % 8 != 0) {
+            img.width   += 8;
+            img.width   -= img.width % 8;
+        }
+        if (img.height % 8 != 0) {
+            img.height += 8;
+            img.height -= img.height % 8;
+        }
 
         img.R.resize(img.height, img.width, true);
         img.G.resize(img.height, img.width, true);
@@ -502,7 +521,6 @@ Image loadPPM(std::string path) {
     return img;
 }
 
-// NOTE: only processes the Cb channel
 void Image::applyDCT(DCTMode mode) 
 {
     std::function<void(const matrix_range<matrix<PixelDataType>>&, matrix_range<matrix<PixelDataType>>&)> dctFn;
@@ -529,59 +547,40 @@ void Image::applyDCT(DCTMode mode)
     DctCb = zero_matrix<PixelDataType>(Cb.size1(), Cb.size2());
     DctCr = zero_matrix<PixelDataType>(Cr.size1(), Cr.size2());
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int w = 0; w < width; w += blocksize) {
         for (int h = 0; h < height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(Y, range(w, w + blocksize), range(h, h + blocksize));
-            matrix_range<matrix<PixelDataType>> slice_dst(DctY, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(Y, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<PixelDataType>> slice_dst(DctY, range(h, h + blocksize), range(w, w + blocksize));
             dctFn(slice_src, slice_dst);
         }
     }
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(w, w+blocksize), range(h, h+blocksize));
-            matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(w, w+blocksize), range(h, h+blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(Cb, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<PixelDataType>> slice_dst(DctCb, range(h, h + blocksize), range(w, w + blocksize));
             dctFn(slice_src, slice_dst);
         }
     }
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(Cr, range(w, w + blocksize), range(h, h + blocksize));
-            matrix_range<matrix<PixelDataType>> slice_dst(DctCr, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(Cr, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<PixelDataType>> slice_dst(DctCr, range(h, h + blocksize), range(w, w + blocksize));
             dctFn(slice_src, slice_dst);
         }
     }
 }
 
-void Image::writeJPEG(std::wstring file)
-{
-    // color conversion to YCbCr
-    *this = convertToColorSpace(YCbCr);
-
-    // Cb/Cr subsampling
-    //applySubsampling(SubsamplingMode::S420_m);
-
-    // DCT
-    applyDCT(DCTMode::Arai);
-
-    // quantization
-    const auto quantization_table = from_vector<Byte>({
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-    });
+void Image::applyQuantization(const matrix<Byte> &quantization_table) {
+    assert(quantization_table.size1() == 8);
+    assert(quantization_table.size2() == 8);
 
     QY = zero_matrix<int>(DctY.size1(), DctY.size2());
     QCb = zero_matrix<int>(DctCb.size1(), DctCb.size2());
@@ -590,8 +589,8 @@ void Image::writeJPEG(std::wstring file)
     for (int w = 0; w < width; w += blocksize) {
         for (int h = 0; h < height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(DctY, range(w, w + blocksize), range(h, h + blocksize));
-            matrix_range<matrix<int>> slice_dst(QY, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(DctY, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<int>> slice_dst(QY, range(h, h + blocksize), range(w, w + blocksize));
             slice_dst.assign(quantize(slice_src, quantization_table));
         }
     }
@@ -599,8 +598,8 @@ void Image::writeJPEG(std::wstring file)
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(DctCb, range(w, w + blocksize), range(h, h + blocksize));
-            matrix_range<matrix<int>> slice_dst(QCb, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(DctCb, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<int>> slice_dst(QCb, range(h, h + blocksize), range(w, w + blocksize));
             slice_dst.assign(quantize(slice_src, quantization_table));
         }
     }
@@ -608,18 +607,19 @@ void Image::writeJPEG(std::wstring file)
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<PixelDataType>> slice_src(DctCr, range(w, w + blocksize), range(h, h + blocksize));
-            matrix_range<matrix<int>> slice_dst(QCr, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<PixelDataType>> slice_src(DctCr, range(h, h + blocksize), range(w, w + blocksize));
+            matrix_range<matrix<int>> slice_dst(QCr, range(h, h + blocksize), range(w, w + blocksize));
             slice_dst.assign(quantize(slice_src, quantization_table));
         }
     }
+}
 
-    // DC difference coding
+void Image::applyDCdifferenceCoding() {
     int b = 0;
     for (int w = 0; w < width; w += blocksize) {
         for (int h = 0; h < height; h += blocksize) {
-            auto tmp = QY(w, h);
-            QY(w, h) = b - tmp;
+            auto tmp = QY(h, w);
+            QY(h, w) = tmp - b;
             b = tmp;
         }
     }
@@ -627,8 +627,8 @@ void Image::writeJPEG(std::wstring file)
     b = 0;
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
-            auto tmp = QCb(w, h);
-            QCb(w, h) = b - tmp;
+            auto tmp = QCb(h, w);
+            QCb(h, w) = tmp - b;
             b = tmp;
         }
     }
@@ -636,21 +636,26 @@ void Image::writeJPEG(std::wstring file)
     b = 0;
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
-            auto tmp = QCr(w, h);
-            QCr(w, h) = b - tmp;
+            auto tmp = QCr(h, w);
+            QCr(h, w) = tmp - b;
             b = tmp;
         }
     }
+}
 
-    // zigzag
+void Image::doZigZagSorting() {
     ZigZagY.clear();
     ZigZagCb.clear();
     ZigZagCr.clear();
 
+    ZigZagY.reserve(QY.size1() / 8 * QY.size2() / 8);
+    ZigZagCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
+    ZigZagCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
+
     for (int w = 0; w < width; w += blocksize) {
         for (int h = 0; h < height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QY, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<int>> slice_src(QY, range(h, h + blocksize), range(w, w + blocksize));
             ZigZagY.push_back(zigzag<int>(slice_src));
         }
     }
@@ -658,7 +663,7 @@ void Image::writeJPEG(std::wstring file)
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QCb, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<int>> slice_src(QCb, range(h, h + blocksize), range(w, w + blocksize));
             ZigZagCb.push_back(zigzag<int>(slice_src));
         }
     }
@@ -666,15 +671,20 @@ void Image::writeJPEG(std::wstring file)
     for (int w = 0; w < subsample_width; w += blocksize) {
         for (int h = 0; h < subsample_height; h += blocksize) {
             // generate slices for data source and the destination of the dct result
-            const matrix_range<matrix<int>> slice_src(QCr, range(w, w + blocksize), range(h, h + blocksize));
+            const matrix_range<matrix<int>> slice_src(QCr, range(h, h + blocksize), range(w, w + blocksize));
             ZigZagCr.push_back(zigzag<int>(slice_src));
         }
     }
+}
 
-    // RLE, category encoding
+void Image::doRLEandCategoryCoding() {
     CategoryCodeY.clear();
     CategoryCodeCb.clear();
     CategoryCodeCr.clear();
+
+    CategoryCodeY.reserve(ZigZagY.size());
+    CategoryCodeCb.reserve(ZigZagCb.size());
+    CategoryCodeCr.reserve(ZigZagCr.size());
 
     for (const auto& data : ZigZagY) {
         auto rle_data = RLE_AC(data);
@@ -693,47 +703,25 @@ void Image::writeJPEG(std::wstring file)
         auto encoded_coeffs = encode_category(rle_data);
         CategoryCodeCr.push_back(encoded_coeffs);
     }
+}
 
-    // Huffman
-    std::vector<int> DC_symbols, AC_symbols;
-    for (const auto& data : CategoryCodeY) {
-        DC_symbols.push_back(data[0].symbol);
-        for (auto it = begin(data) + 1; it != end(data); ++it)
-            AC_symbols.push_back((*it).symbol);
-    }
-    for (const auto& data : CategoryCodeCb) {
-        DC_symbols.push_back(data[0].symbol);
-        for (auto it = begin(data) + 1; it != end(data); ++it)
-            AC_symbols.push_back((*it).symbol);
-    }
-    for (const auto& data : CategoryCodeCr) {
-        DC_symbols.push_back(data[0].symbol);
-        for (auto it = begin(data) + 1; it != end(data); ++it)
-            AC_symbols.push_back((*it).symbol);
-    }
-
-    auto DC_huff = generateHuffmanCode(DC_symbols);
-    auto AC_huff = generateHuffmanCode(AC_symbols);
-
-    auto& DC_encoder = DC_huff.first;
-    auto& DC_Huffman_Table = DC_huff.second;
-
-    auto& AC_encoder = AC_huff.first;
-    auto& AC_Huffman_Table = AC_huff.second;
-
-    // encode symbols
+void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
+                              SymbolCodeMap &Y_AC,
+                              SymbolCodeMap &C_DC,
+                              SymbolCodeMap &C_AC) {
     BitstreamY.clear();
     for (auto& data : CategoryCodeY) {
         Bitstream stream;
+        auto& code = data[0];
 
-        auto encoded_DC = DC_encoder[data[0].symbol];
+        auto encoded_DC = Y_DC[code.symbol];
         stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << data[0].code;
+        stream << code.code;
 
         for (auto it = begin(data) + 1; it != end(data); ++it) {
             auto& code = *it;
-            auto encoded_AC = AC_encoder[code.symbol];
-            stream.push_back(encoded_AC.code, encoded_AC.length);
+            auto encoded_AC = Y_AC[code.symbol];
+            stream.push_back(encoded_DC.code, encoded_DC.length);
             stream << code.code;
         }
 
@@ -743,14 +731,15 @@ void Image::writeJPEG(std::wstring file)
     BitstreamCb.clear();
     for (auto& data : CategoryCodeCb) {
         Bitstream stream;
+        auto& code = data[0];
 
-        auto encoded_DC = DC_encoder[data[0].symbol];
+        auto encoded_DC = C_DC[code.symbol];
         stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << data[0].code;
+        stream << code.code;
 
         for (auto it = begin(data) + 1; it != end(data); ++it) {
             auto& code = *it;
-            auto encoded_AC = AC_encoder[code.symbol];
+            auto encoded_AC = C_AC[code.symbol];
             stream.push_back(encoded_AC.code, encoded_AC.length);
             stream << code.code;
         }
@@ -761,47 +750,130 @@ void Image::writeJPEG(std::wstring file)
     BitstreamCr.clear();
     for (auto& data : CategoryCodeCr) {
         Bitstream stream;
+        auto& code = data[0];
 
-        auto encoded_DC = DC_encoder[data[0].symbol];
+        auto encoded_DC = C_DC[code.symbol];
         stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << data[0].code;
+        stream << code.code;
 
         for (auto it = begin(data) + 1; it != end(data); ++it) {
             auto& code = *it;
-            auto encoded_AC = AC_encoder[code.symbol];
+            auto encoded_AC = C_AC[code.symbol];
             stream.push_back(encoded_AC.code, encoded_AC.length);
             stream << code.code;
         }
 
         BitstreamCr.push_back(stream);
     }
-
-    using namespace Segment;
-
-    std::ofstream jpeg(file, std::ios::binary);
-  
-    auto zigzag_qtable = zigzag<Byte>(quantization_table);
-
-    Bitstream stream;
-
-    jpeg << SOI
-        << APP0
-        << DQT.pushQuantizationTable(zigzag_qtable, sDQT::Zero)
-        << SOF0_3c
-            .setImageSizeX(width)
-            .setImageSizeY(height)
-            .setCompSetup({ CompSetup::Y,  CompSetup::NoSubSampling, 0,
-                            CompSetup::Cb, CompSetup::NoSubSampling, 0,
-                            CompSetup::Cr, CompSetup::NoSubSampling, 0 })
-        << DHT.pushCodeData(DC_Huffman_Table, sDHT::DC, sDHT::First)
-              .pushCodeData(AC_Huffman_Table, sDHT::AC, sDHT::First)
-        << SOS
-        ;
-
-    for (auto i = 0U; i < BitstreamY.size(); ++i) {
-        jpeg << BitstreamY[i] << BitstreamCb[i] << BitstreamCr[i];
-    }
-
-    jpeg << EOI;
 }
 
+void Image::writeJPEG(std::wstring file)
+{
+    // color conversion to YCbCr
+    *this = convertToColorSpace(YCbCr);
+
+    // Cb/Cr subsampling
+    //applySubsampling(SubsamplingMode::S420_m);
+    // TODO: need to expand subsampled channels back to 8x8 blocks
+
+    applyDCT(DCTMode::Arai);
+
+    // quantization
+    matrix<Byte> quantization_table = from_vector<Byte>({
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    });
+
+    applyQuantization(quantization_table);
+
+    // DC difference coding
+    applyDCdifferenceCoding();
+
+    // zigzag
+    doZigZagSorting();
+    
+    // RLE, category encoding
+    doRLEandCategoryCoding();
+
+    // generate Huffman tables
+    std::vector<int> Y_DC_symbols, Y_AC_symbols;
+    std::vector<int> C_DC_symbols, C_AC_symbols;
+
+    // count symbols
+    for (const auto& data : CategoryCodeY) {
+        Y_DC_symbols.push_back(data[0].symbol);
+        for (auto it = begin(data) + 1; it != end(data); ++it)
+            Y_AC_symbols.push_back((*it).symbol);
+    }
+    for (const auto& data : CategoryCodeCb) {
+        C_DC_symbols.push_back(data[0].symbol);
+        for (auto it = begin(data) + 1; it != end(data); ++it)
+            C_AC_symbols.push_back((*it).symbol);
+    }
+    for (const auto& data : CategoryCodeCr) {
+        C_DC_symbols.push_back(data[0].symbol);
+        for (auto it = begin(data) + 1; it != end(data); ++it)
+            C_AC_symbols.push_back((*it).symbol);
+    }
+
+    auto Y_DC_huff = generateHuffmanCode(Y_DC_symbols);
+    auto Y_AC_huff = generateHuffmanCode(Y_AC_symbols);
+
+    auto C_DC_huff = generateHuffmanCode(C_DC_symbols);
+    auto C_AC_huff = generateHuffmanCode(C_AC_symbols);
+
+    auto& Y_DC_encoder       = Y_DC_huff.first;
+    auto& Y_DC_Huffman_Table = Y_DC_huff.second;
+
+    auto& Y_AC_encoder       = Y_AC_huff.first;
+    auto& Y_AC_Huffman_Table = Y_AC_huff.second;
+
+    auto& C_DC_encoder       = C_DC_huff.first;
+    auto& C_DC_Huffman_Table = C_DC_huff.second;
+
+    auto& C_AC_encoder       = C_AC_huff.first;
+    auto& C_AC_Huffman_Table = C_AC_huff.second;
+
+    // Huffman encode symbols
+    doHuffmanEncoding(Y_DC_encoder, Y_AC_encoder, C_DC_encoder, C_AC_encoder);
+
+    // jpeg needs zigzag sorted quantization table
+    auto zigzag_qtable = zigzag<Byte>(quantization_table);
+
+    std::ofstream jpeg(file, std::ios::binary);
+
+    using namespace Segment;
+    jpeg << sSOI()
+        << sAPP0()
+        << sDQT().pushQuantizationTable(zigzag_qtable, ComponentSetup::QuantizationTableID::Zero)
+        << sDQT().pushQuantizationTable(zigzag_qtable, ComponentSetup::QuantizationTableID::One)
+        << sSOF0()
+            .setImageSizeX(real_width)
+            .setImageSizeY(real_height)
+            .setupY (ComponentSetup::Half, ComponentSetup::QuantizationTableID::Zero)
+            .setupCb(ComponentSetup::Half, ComponentSetup::QuantizationTableID::One)
+            .setupCr(ComponentSetup::Half, ComponentSetup::QuantizationTableID::One)
+        << sDHT().pushCodeData(Y_DC_Huffman_Table, sDHT::DC, sDHT::First)
+        << sDHT().pushCodeData(Y_AC_Huffman_Table, sDHT::AC, sDHT::First)
+        << sDHT().pushCodeData(C_DC_Huffman_Table, sDHT::DC, sDHT::Second)
+        << sDHT().pushCodeData(C_AC_Huffman_Table, sDHT::AC, sDHT::Second)
+        << sSOS()
+            .setupY (sDHT::First, sDHT::First) // DC, AC
+            .setupCb(sDHT::Second, sDHT::Second)
+            .setupCr(sDHT::Second, sDHT::Second)
+        ;
+
+    Bitstream stream;
+    for (auto i = 0U; i < BitstreamY.size(); ++i) {
+        stream << BitstreamY[i] << BitstreamCb[i] << BitstreamCr[i];
+    }
+    stream.fill();
+    jpeg << stream;
+    jpeg << sEOI();
+}

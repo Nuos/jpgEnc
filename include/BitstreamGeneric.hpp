@@ -213,8 +213,13 @@ Bitstream_Generic<BlockType>& Bitstream_Generic<BlockType>::push_back_LSB_mode(u
 template<typename BlockType>
 std::ostream& operator<<(std::ostream& out, const Bitstream_Generic<BlockType>& bitstream)
 {
-    if (bitstream.sz > 0)
-        out.write((const char*)&bitstream.blocks[0], sizeof(BlockType)*bitstream.blocks.size());
+    if (bitstream.sz > 0) {
+        for (const auto& block : bitstream.blocks) {
+            out.write((const char*)&block, sizeof(block));
+            if (block == 0xFF)
+                out.put(0x00);
+        }
+    }
     return out;
 }
 
@@ -304,6 +309,6 @@ using Bitstream8 = Bitstream_Generic<uint8_t>;
 using Bitstream16 = Bitstream_Generic<uint16_t>;
 using Bitstream32 = Bitstream_Generic<uint32_t>;
 using Bitstream64 = Bitstream_Generic<uint64_t>;
-using Bitstream = Bitstream32;
+using Bitstream = Bitstream8;
 
 typedef std::initializer_list<bool> Bits;

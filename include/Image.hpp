@@ -14,6 +14,7 @@
 #include <boost/numeric/ublas/matrix.hpp>
 
 #include "Coding.hpp"
+#include "Huffman.hpp"
 
 typedef unsigned int uint;
 typedef uint8_t Byte;
@@ -78,6 +79,14 @@ public:
     void applySubsampling(SubsamplingMode mode);
 
     void applyDCT(DCTMode mode);
+    void applyQuantization(const matrix<Byte> &quantization_table);
+    void applyDCdifferenceCoding();
+    void doZigZagSorting();
+    void doRLEandCategoryCoding();
+    void doHuffmanEncoding(SymbolCodeMap &Y_DC,
+                           SymbolCodeMap &Y_AC,
+                           SymbolCodeMap &C_DC,
+                           SymbolCodeMap &C_AC);
 
     // JPEG SEGMENTS
     void writeJPEG(std::wstring file);
@@ -90,6 +99,7 @@ private:
     // ACCESSORS
 public:
     uint width, height;
+    uint real_width, real_height;
     uint subsample_width, subsample_height;
     matrix<PixelDataType> &R, &G, &B;
     matrix<PixelDataType> &Y, &Cb, &Cr;

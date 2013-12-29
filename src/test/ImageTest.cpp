@@ -48,7 +48,6 @@ BOOST_AUTO_TEST_CASE(image_color_conv_test) {
     auto image = loadPPM("res/tester_p3.ppm");
 
     auto YCbCr_image = image.convertToColorSpace(Image::YCbCr);
-    auto v = YCbCr_image.Y(0, 3);
     CHECK_CLOSE(YCbCr_image.Y(0, 3), 6.195 - 128);
     CHECK_CLOSE(YCbCr_image.Cb(0, 3), 132.9695 - 128);
     CHECK_CLOSE(YCbCr_image.Cr(0, 3), 134.2805 - 128);
@@ -226,26 +225,62 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
     // writing dummy image segments
     {
-        auto img = loadPPM("res/tester_DC.ppm");
-        img.writeJPEG(L"abc.jpeg");
+        // one color 8x8
+        auto img = loadPPM("res/tester_black.ppm");
+        img.writeJPEG(L"tester_black_8x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_white.ppm");
+        img.writeJPEG(L"tester_white_8x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_red.ppm");
+        img.writeJPEG(L"tester_red_8x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_green.ppm");
+        img.writeJPEG(L"tester_green_8x8_own_encoder.jpg");
+
+        img = loadPPM("res/tester_blue.ppm");
+        img.writeJPEG(L"tester_blue_8x8_own_encoder.jpg");
+
+        // one color 4x4
+        img = loadPPM("res/tester_black_4x4.ppm");
+        img.writeJPEG(L"tester_black_4x4_own_encoder.jpg");
+
+        img = loadPPM("res/tester_white_4x4.ppm");
+        img.writeJPEG(L"tester_white_4x4_own_encoder.jpg");
+
+        img = loadPPM("res/tester_red_4x4.ppm");
+        img.writeJPEG(L"tester_red_4x4_own_encoder.jpg");
+
+        img = loadPPM("res/tester_green_4x4.ppm");
+        img.writeJPEG(L"tester_green_4x4_own_encoder.jpg");
+
+        img = loadPPM("res/tester_blue_4x4.ppm");
+        img.writeJPEG(L"tester_blue_4x4_own_encoder.jpg");
+
+        // various
+        img = loadPPM("res/tester_p3.ppm");
+        img.writeJPEG(L"tester_p3_4x4_own_encoder.jpg");
+
+        img = loadPPM("res/tester_green_12x8.ppm");
+        img.writeJPEG(L"tester_green_12x8_own_encoder.jpg");
     }
 
     // writing draigoch jpeg segments
-    {
-        auto image = loadPPM("res/Draigoch_p6.ppm");
-        image.writeJPEG(L"Draigoch.jpeg");
-    }
+    //{
+    //    auto image = loadPPM("res/Draigoch_p6.ppm");
+    //    image.writeJPEG(L"Draigoch.jpeg");
+    //}
 
     // setting segment data
     {
         using namespace Segment;
 
         // APP0 Seg
-        BOOST_CHECK_EQUAL(18, sizeof(APP0));
+        BOOST_CHECK_EQUAL(18, sizeof(sAPP0));
 
-        APP0.setLen(256)
-            .setXdensity(1)
-            .setYdensity(1);
+        auto APP0 = sAPP0().setLen(256)
+                           .setXdensity(1)
+                           .setYdensity(1);
 
         BOOST_CHECK_EQUAL(APP0.len[0], 1);
         BOOST_CHECK_EQUAL(APP0.len[1], 0);
@@ -258,32 +293,31 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
 
         // SOF0 seg (3 component version)
-        BOOST_CHECK_EQUAL(13, sizeof(Segment::SOF0_1c));
-        BOOST_CHECK_EQUAL(19, sizeof(Segment::SOF0_3c));
+        BOOST_CHECK_EQUAL(19, sizeof(Segment::sSOF0));
 
-        SOF0_3c.setImageSizeX(256)
-               .setImageSizeY(256)
-               .setCompSetup(
-        { CompSetup::Y, CompSetup::NoSubSampling, 0,
-          CompSetup::Cb, CompSetup::Half, 1,
-          CompSetup::Cr, CompSetup::Half, 2, }
+        auto SOF0 = sSOF0().setImageSizeX(256)
+                           .setImageSizeY(256)
+                           .setComponentSetup(
+        { ComponentSetup::Y, ComponentSetup::NoSubSampling, 0,
+          ComponentSetup::Cb, ComponentSetup::Half, 1,
+          ComponentSetup::Cr, ComponentSetup::Half, 2, }
         );
 
-        BOOST_CHECK_EQUAL(SOF0_3c.image_size_x[0], 1);
-        BOOST_CHECK_EQUAL(SOF0_3c.image_size_x[1], 0);
+        BOOST_CHECK_EQUAL(SOF0.image_size_x[0], 1);
+        BOOST_CHECK_EQUAL(SOF0.image_size_x[1], 0);
 
-        BOOST_CHECK_EQUAL(SOF0_3c.image_size_y[0], 1);
-        BOOST_CHECK_EQUAL(SOF0_3c.image_size_y[1], 0);
+        BOOST_CHECK_EQUAL(SOF0.image_size_y[0], 1);
+        BOOST_CHECK_EQUAL(SOF0.image_size_y[1], 0);
 
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[0], CompSetup::Y);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[1], CompSetup::NoSubSampling);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[2], 0);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[3], CompSetup::Cb);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[4], CompSetup::Half);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[5], 1);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[6], CompSetup::Cr);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[7], CompSetup::Half);
-        BOOST_CHECK_EQUAL(SOF0_3c.component_setup[8], 2);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[0], ComponentSetup::Y);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[1], ComponentSetup::NoSubSampling);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[2], 0);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[3], ComponentSetup::Cb);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[4], ComponentSetup::Half);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[5], 1);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[6], ComponentSetup::Cr);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[7], ComponentSetup::Half);
+        BOOST_CHECK_EQUAL(SOF0.component_setup[8], 2);
     }
 }
 

@@ -28,7 +28,7 @@ namespace Segment
     inline Byte getLo(short i) { return (i & 0x00FF); }
 
     // stuff for the component (Y, Cb or Cr) config
-    namespace CompSetup
+    namespace ComponentSetup
     {
         enum ID : Byte
         {
@@ -42,8 +42,16 @@ namespace Segment
             NoSubSampling = 0x22,
             Half = 0x11
         };
+
+        enum QuantizationTableID {
+            Zero = 0,
+            One,
+            Two,
+            Three
+        };
     }
 
+    // FF D8
     struct sSOI
     {
         const Bytes<2> marker;
@@ -61,27 +69,8 @@ namespace Segment
             return out;
         }
     };
-    static sSOI SOI;
 
-    struct sEOI
-    {
-        const Bytes<2> marker;
-
-        // defaults
-        sEOI()
-            : marker{ { 0xff, 0xd9 } }
-        {}
-
-        // stream I/O
-        friend std::ostream& operator<<(std::ostream& out, const sEOI& EOI)
-        {
-            const auto& segment = EOI;
-            out.write((const char*)&segment, sizeof(segment));
-            return out;
-        }
-    };
-    static sEOI EOI;
-
+    // FF E0
     struct sAPP0
     {
         const Bytes<2> marker;
@@ -100,8 +89,8 @@ namespace Segment
             type{ { 'J', 'F', 'I', 'F', '\0' } },
             rev{ { 1, 1 } },
             pixelsize{ { 0 } },
-            x_density{ { 0, 0x48 } }, // arbitrary value?!
-            y_density{ { 0, 0x48 } }, // arbitrary value?!
+            x_density{ { 0, 0x01 } }, // arbitrary value?!
+            y_density{ { 0, 0x01 } }, // arbitrary value?!
             thumbnail_size{ { 0, 0 } }
         {}
 
@@ -118,11 +107,11 @@ namespace Segment
             return out;
         }
     };
-    static sAPP0 APP0; // prefilled/predefined APP0 segment
-
-    template<uint num_components>
+    
+    // FF C0
     struct sSOF0
     {
+        static const Byte num_components = 3;
         const Bytes<2> marker;
         const Bytes<2> len;   // HI/LO
                               // Constraint: 8 + num components * 3
@@ -135,16 +124,16 @@ namespace Segment
 
         // defaults
         sSOF0()
-            : sSOF0{ 0, 0, {} }
+            : sSOF0{ 0, 0 }
         {}
 
         // parametrized constructor
         sSOF0(int size_x,
               int size_y,
               std::initializer_list<Byte> comp_setup = {
-                  CompSetup::Y, CompSetup::NoSubSampling, 0,
-                  CompSetup::Cb, CompSetup::Half, 1,
-                  CompSetup::Cr, CompSetup::Half, 2,
+                  ComponentSetup::Y,  ComponentSetup::NoSubSampling, 0,
+                  ComponentSetup::Cb, ComponentSetup::Half, 1,
+                  ComponentSetup::Cr, ComponentSetup::Half, 2,
               }
         )
             : marker{ { 0xff, 0xc0 } },
@@ -160,19 +149,21 @@ namespace Segment
         // setter
         sSOF0& setImageSizeX(short _sz) { set(image_size_x, { getHi(_sz), getLo(_sz) }); return *this; }
         sSOF0& setImageSizeY(short _sz) { set(image_size_y, { getHi(_sz), getLo(_sz) }); return *this; }
-        sSOF0& setCompSetup(std::initializer_list<Byte> comp_setup) { set(component_setup, comp_setup); return *this; }
+        sSOF0& setupY (ComponentSetup::Subsampling subsample_mode, ComponentSetup::QuantizationTableID quantization_table) { component_setup[1] = subsample_mode; component_setup[2] = quantization_table; return *this; }
+        sSOF0& setupCb(ComponentSetup::Subsampling subsample_mode, ComponentSetup::QuantizationTableID quantization_table) { component_setup[4] = subsample_mode; component_setup[5] = quantization_table; return *this; }
+        sSOF0& setupCr(ComponentSetup::Subsampling subsample_mode, ComponentSetup::QuantizationTableID quantization_table) { component_setup[7] = subsample_mode; component_setup[8] = quantization_table; return *this; }
+        sSOF0& setComponentSetup(std::initializer_list<Byte> comp_setup) { set(component_setup, comp_setup); return *this; }
 
         // stream I/O
-        friend std::ostream& operator<<(std::ostream& out, const sSOF0<num_components>& SOF0)
+        friend std::ostream& operator<<(std::ostream& out, const sSOF0& SOF0)
         {
             const auto& segment = SOF0;
             out.write((const char*)&segment, sizeof(segment));
             return out;
         }
     };
-    static sSOF0<1> SOF0_1c; // prefilled/predefined SOF0 segment with 1 component/channel (Y, grayscale)
-    static sSOF0<3> SOF0_3c; // prefilled/predefined SOF0 segment with 3 components/channels (color image)
-
+    
+    // FF C4
     struct sDHT
     {
         const Bytes<2> marker;
@@ -208,7 +199,7 @@ namespace Segment
             auto& symbols = HTs.back().symbols;
             auto& code_lengths = HTs.back().code_lengths;
 
-            HTinfo.assign(((Byte)cls << 4) | (Byte)dest);
+            HTinfo.assign((Byte)((cls << 4) | dest));
 
             // symbols with codelength 0 shouldn't be possible and the DHT segment also starts with codelength 1
             symbols.clear();
@@ -256,15 +247,15 @@ namespace Segment
             auto len = 2;
             for (const auto& HT : HTs) {
                 assert(HT.symbols.size() <= 256);
-                len += 17 + HT.symbols.size();
+                len += 17 + static_cast<int>(HT.symbols.size());
             }
             assert(len < 65536); // only 16 bit available in length field
             setLen(static_cast<short>(len));
             return *this;
         }
     };
-    static sDHT DHT; // prefilled/predefined DHT segment
-
+   
+    // FF DB
     struct sDQT
     {
         const Bytes<2> marker;
@@ -275,8 +266,6 @@ namespace Segment
         };
         std::vector<sQT> QTs;
 
-        enum Destination { Zero = 0, One, Two, Three };
-
         // defaults
         sDQT()
             : marker{ { 0xff, 0xdb } },
@@ -284,7 +273,7 @@ namespace Segment
         {}
 
         // setter
-        sDQT& pushQuantizationTable(vector<Byte> &coefficients, Destination dest) {
+        sDQT& pushQuantizationTable(vector<Byte> &coefficients, ComponentSetup::QuantizationTableID dest) {
             // add new table
             QTs.resize(QTs.size() + 1);
             auto& QT = QTs.back();
@@ -328,8 +317,8 @@ namespace Segment
             return *this;
         }
     };
-    static sDQT DQT; // prefilled/predefined DHT segment
-
+    
+    // FF DA
     struct sSOS
     {
         const Bytes<2> marker;
@@ -344,24 +333,47 @@ namespace Segment
             len{ { 0, 0 } },
             num_components{ { 3 } },
             component_setup{ {
-                CompSetup::Y, (sDHT::First << 4) | sDHT::First,
-                CompSetup::Cb, (sDHT::First << 4) | sDHT::First,
-                CompSetup::Cr, (sDHT::First << 4) | sDHT::First,
+                ComponentSetup::Y, (sDHT::First << 4) | sDHT::First,
+                ComponentSetup::Cb, (sDHT::First << 4) | sDHT::First,
+                ComponentSetup::Cr, (sDHT::First << 4) | sDHT::First,
             } },
             blubb{ { 0x0, 0x3f, 0x0 } }
         {
             setLen(6 + 2 * 3);
         }
 
+        sSOS& setupY (sDHT::Destination DC_table, sDHT::Destination AC_table) { component_setup[1] = (DC_table << 4) | AC_table; return *this; }
+        sSOS& setupCb(sDHT::Destination DC_table, sDHT::Destination AC_table) { component_setup[3] = (DC_table << 4) | AC_table; return *this; }
+        sSOS& setupCr(sDHT::Destination DC_table, sDHT::Destination AC_table) { component_setup[5] = (DC_table << 4) | AC_table; return *this; }
+
         // stream I/O
         friend std::ostream& operator<<(std::ostream& out, const sSOS& SOS)
         {
-            out.write((const char*)&SOS, 14);
+            out.write((const char*)&SOS, sizeof(SOS));
             return out;
         }
 
     private:
         sSOS& setLen(short _len) { set(len, { getHi(_len), getLo(_len) }); return *this; }
     };
-    static sSOS SOS; // prefilled/predefined DHT segment
+
+    // FF D9
+    struct sEOI
+    {
+        const Bytes<2> marker;
+
+        // defaults
+        sEOI()
+            : marker{ { 0xff, 0xd9 } }
+        {}
+
+        // stream I/O
+        friend std::ostream& operator<<(std::ostream& out, const sEOI& EOI)
+        {
+            const auto& segment = EOI;
+            out.write((const char*)&segment, sizeof(segment));
+            return out;
+        }
+    };
+
 }

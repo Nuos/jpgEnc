@@ -27,7 +27,6 @@ matrix<T> from_vector(const std::vector<T>& v) {
     return m;
 }
 
-
 template <typename T>
 std::vector<T> zigzag(matrix<T> m) {
     std::vector<T> r;
@@ -163,6 +162,7 @@ inline std::pair<short, Bitstream> getCategoryAndCode(int value) {
     }
 
     assert(!"Shouldn't happen!");
+    return std::make_pair(0, Bitstream());
 }
 
 // takes the encoded list of RLE_PAIRS and generates the symbol for huffman coding and a code from category encoding 
