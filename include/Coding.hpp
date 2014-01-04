@@ -29,31 +29,25 @@ matrix<T> from_vector(const std::vector<T>& v) {
 
 template <typename T>
 std::vector<T> zigzag(matrix<T> m) {
+    const auto lookup = from_vector<uint>({
+        0, 1, 5, 6, 14, 15, 27, 28,
+        2, 4, 7, 13, 16, 26, 29, 42,
+        3, 8, 12, 17, 25, 30, 41, 43,
+        9, 11, 18, 24, 31, 40, 44, 53,
+        10, 19, 23, 32, 39, 45, 52, 54,
+        20, 22, 33, 38, 46, 51, 55, 60,
+        21, 34, 37, 47, 50, 56, 59, 61,
+        35, 36, 48, 49, 57, 58, 62, 63
+    });
+
+    assert(m.size1() == 8);
+    assert(m.size2() == 8);
     std::vector<T> r;
-    const auto sz = m.size1() * m.size2();
-    r.reserve(sz);
+    r.resize(64);
 
-    size_t x = 0, y = 0;
-    size_t dx = 1, dy = 0;
-    int diag_dx = 1, diag_dy = -1;
-
-    auto eof = &y;
-    auto eof_t = &x;
-
-    while (r.size() != sz) {
-        while (*eof != 0 && *eof_t != 7) {
-            r.push_back(m(y, x));
-            x += diag_dx; y += diag_dy;
-        }
-
-        r.push_back(m(y, x));
-
-        if (x + dx > 7 || y + dy > 7)
-            std::swap(dx, dy);
-        x += dx; y += dy;
-        std::swap(dx, dy);
-        std::swap(diag_dx, diag_dy);
-        std::swap(eof, eof_t);
+    for (uint i = 0; i < 8; ++i) {
+        for (uint j = 0; j < 8; ++j)
+            r[lookup(i, j)] = m(i, j);
     }
 
     return r;
