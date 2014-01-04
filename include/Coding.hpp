@@ -150,9 +150,9 @@ inline std::pair<short, Bitstream> getCategoryAndCode(int value) {
 
             auto offset = 0l;
             if (value < 0)
-                offset = (upper_bound - abs_val);
+                offset = upper_bound - abs_val;
             else
-                offset = (bound_diff + 1) + value - lower_bound;
+                offset = value;
 
             return std::make_pair(category, Bitstream(offset, category));
         }
