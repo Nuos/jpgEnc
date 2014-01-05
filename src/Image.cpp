@@ -651,20 +651,23 @@ void Image::applyDCdifferenceCoding() {
     }
 }
 
-void Image::doZigZagSorting() {
-    ZigZagY.clear();
-    ZigZagCb.clear();
-    ZigZagCr.clear();
+void Image::doRLEandCategoryCoding() {
+    CategoryCodeY.clear();
+    CategoryCodeCb.clear();
+    CategoryCodeCr.clear();
 
-    ZigZagY.reserve(QY.size1() / 8 * QY.size2() / 8);
-    ZigZagCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
-    ZigZagCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
+    CategoryCodeY.reserve(QY.size1() / 8 * QY.size2() / 8);
+    CategoryCodeCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
+    CategoryCodeCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
 
     for (int h = 0; h < height; h += blocksize) {
         for (int w = 0; w < width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const auto slice_src = subrange(QY, h, h + blocksize, w, w + blocksize);
-            ZigZagY.push_back(zigzag<int>(slice_src));
+
+            auto rle_data = RLE_AC(slice_src);
+            auto encoded_coeffs = encode_category(rle_data);
+            CategoryCodeY.push_back(encoded_coeffs);
         }
     }
 
@@ -672,7 +675,10 @@ void Image::doZigZagSorting() {
         for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const auto slice_src = subrange(QCb, h, h + blocksize, w, w + blocksize);
-            ZigZagCb.push_back(zigzag<int>(slice_src));
+
+            auto rle_data = RLE_AC(slice_src);
+            auto encoded_coeffs = encode_category(rle_data);
+            CategoryCodeCb.push_back(encoded_coeffs);
         }
     }
 
@@ -680,36 +686,11 @@ void Image::doZigZagSorting() {
         for (int w = 0; w < subsample_width; w += blocksize) {
             // generate slices for data source and the destination of the dct result
             const auto slice_src = subrange(QCr, h, h + blocksize, w, w + blocksize);
-            ZigZagCr.push_back(zigzag<int>(slice_src));
+
+            auto rle_data = RLE_AC(slice_src);
+            auto encoded_coeffs = encode_category(rle_data);
+            CategoryCodeCr.push_back(encoded_coeffs);
         }
-    }
-}
-
-void Image::doRLEandCategoryCoding() {
-    CategoryCodeY.clear();
-    CategoryCodeCb.clear();
-    CategoryCodeCr.clear();
-
-    CategoryCodeY.reserve(ZigZagY.size());
-    CategoryCodeCb.reserve(ZigZagCb.size());
-    CategoryCodeCr.reserve(ZigZagCr.size());
-
-    for (const auto& data : ZigZagY) {
-        auto rle_data = RLE_AC(data);
-        auto encoded_coeffs = encode_category(rle_data);
-        CategoryCodeY.push_back(encoded_coeffs);
-    }
-
-    for (const auto& data : ZigZagCb) {
-        auto rle_data = RLE_AC(data);
-        auto encoded_coeffs = encode_category(rle_data);
-        CategoryCodeCb.push_back(encoded_coeffs);
-    }
-
-    for (const auto& data : ZigZagCr) {
-        auto rle_data = RLE_AC(data);
-        auto encoded_coeffs = encode_category(rle_data);
-        CategoryCodeCr.push_back(encoded_coeffs);
     }
 }
 
@@ -802,11 +783,8 @@ void Image::writeJPEG(std::wstring file)
 
     // DC difference coding
     applyDCdifferenceCoding();
-
-    // zigzag
-    doZigZagSorting();
     
-    // RLE, category encoding
+    // zigzag, RLE and category encoding
     doRLEandCategoryCoding();
 
     // generate Huffman tables

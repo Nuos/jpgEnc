@@ -154,6 +154,13 @@ void test_dcts(float stretch_factor)
     LogOneTransformDuration(duration, count);
 }
 
+void test_encode_draigoch() {
+    PRINT_TEST_NAME;
+
+    auto image = loadPPM("res/Draigoch_p6.ppm");
+    timeFn([&]() { image.writeJPEG(L"Draigoch.jpeg"); });
+}
+
 int main(int argc, const char** argv)
 {
     //test_bitstream<boost::dynamic_bitset<>>();
@@ -170,7 +177,8 @@ int main(int argc, const char** argv)
     if (argc == 2)
         stretch_factor = std::stof(argv[1]);
 
-    test_dcts(stretch_factor);
+    //test_dcts(stretch_factor);
+    test_encode_draigoch();
 
     return 0;
 }
