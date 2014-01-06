@@ -661,10 +661,14 @@ void Image::doRLEandCategoryCoding() {
     CategoryCodeCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
     CategoryCodeCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
 
+    // the data in the CategoryCodeXX vectors must be sequential correct (left to right, then top to bottom),
+    // so no parallel execution of the loops possible
+    // but we can run the rle parallel on the different channels
+
     auto f1 = std::async([&]() {
         for (int h = 0; h < height; h += blocksize) {
             for (int w = 0; w < width; w += blocksize) {
-                // generate slices for data source and the destination of the dct result
+                // generate slices for the data source
                 const auto slice_src = subrange(QY, h, h + blocksize, w, w + blocksize);
 
                 auto rle_data = RLE_AC(slice_src);
@@ -677,7 +681,7 @@ void Image::doRLEandCategoryCoding() {
     auto f2 = std::async([&]() {
         for (int h = 0; h < subsample_height; h += blocksize) {
             for (int w = 0; w < subsample_width; w += blocksize) {
-                // generate slices for data source and the destination of the dct result
+                // generate slices for the data source
                 const auto slice_src = subrange(QCb, h, h + blocksize, w, w + blocksize);
 
                 auto rle_data = RLE_AC(slice_src);
@@ -690,7 +694,7 @@ void Image::doRLEandCategoryCoding() {
     auto f3 = std::async([&]() {
         for (int h = 0; h < subsample_height; h += blocksize) {
             for (int w = 0; w < subsample_width; w += blocksize) {
-                // generate slices for data source and the destination of the dct result
+                // generate slices for the data source
                 const auto slice_src = subrange(QCr, h, h + blocksize, w, w + blocksize);
 
                 auto rle_data = RLE_AC(slice_src);
@@ -700,6 +704,7 @@ void Image::doRLEandCategoryCoding() {
         }
     });
 
+    // wait for results
     f1.get();
     f2.get();
     f3.get();
@@ -708,63 +713,80 @@ void Image::doRLEandCategoryCoding() {
 void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
                               SymbolCodeMap &Y_AC,
                               SymbolCodeMap &C_DC,
-                              SymbolCodeMap &C_AC) {
-    BitstreamY.clear();
-    for (auto& data : CategoryCodeY) {
-        Bitstream stream;
-        auto& code = data[0];
+                              SymbolCodeMap &C_AC)
+{
 
-        auto encoded_DC = Y_DC[code.symbol];
-        stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << code.code;
+    // the data in the BitstreamXX vectors must be sequential correct (left to right, then top to bottom),
+    // so no parallel execution of the loops possible
+    // but we can run the rle parallel on the different channels
 
-        for (auto it = begin(data) + 1; it != end(data); ++it) {
-            auto& code = *it;
-            auto encoded_AC = Y_AC[code.symbol];
-            stream.push_back(encoded_AC.code, encoded_AC.length);
+    auto f1 = std::async([&]() {
+        BitstreamY.clear();
+        for (auto& data : CategoryCodeY) {
+            Bitstream stream;
+            auto& code = data[0];
+
+            auto encoded_DC = Y_DC[code.symbol];
+            stream.push_back(encoded_DC.code, encoded_DC.length);
             stream << code.code;
+
+            for (auto it = begin(data) + 1; it != end(data); ++it) {
+                auto& code = *it;
+                auto encoded_AC = Y_AC[code.symbol];
+                stream.push_back(encoded_AC.code, encoded_AC.length);
+                stream << code.code;
+            }
+
+            BitstreamY.push_back(stream);
         }
+    });
 
-        BitstreamY.push_back(stream);
-    }
+    auto f2 = std::async([&]() {
+        BitstreamCb.clear();
+        for (auto& data : CategoryCodeCb) {
+            Bitstream stream;
+            auto& code = data[0];
 
-    BitstreamCb.clear();
-    for (auto& data : CategoryCodeCb) {
-        Bitstream stream;
-        auto& code = data[0];
-
-        auto encoded_DC = C_DC[code.symbol];
-        stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << code.code;
-
-        for (auto it = begin(data) + 1; it != end(data); ++it) {
-            auto& code = *it;
-            auto encoded_AC = C_AC[code.symbol];
-            stream.push_back(encoded_AC.code, encoded_AC.length);
+            auto encoded_DC = C_DC[code.symbol];
+            stream.push_back(encoded_DC.code, encoded_DC.length);
             stream << code.code;
+
+            for (auto it = begin(data) + 1; it != end(data); ++it) {
+                auto& code = *it;
+                auto encoded_AC = C_AC[code.symbol];
+                stream.push_back(encoded_AC.code, encoded_AC.length);
+                stream << code.code;
+            }
+
+            BitstreamCb.push_back(stream);
         }
+    });
 
-        BitstreamCb.push_back(stream);
-    }
+    auto f3 = std::async([&]() {
+        BitstreamCr.clear();
+        for (auto& data : CategoryCodeCr) {
+            Bitstream stream;
+            auto& code = data[0];
 
-    BitstreamCr.clear();
-    for (auto& data : CategoryCodeCr) {
-        Bitstream stream;
-        auto& code = data[0];
-
-        auto encoded_DC = C_DC[code.symbol];
-        stream.push_back(encoded_DC.code, encoded_DC.length);
-        stream << code.code;
-
-        for (auto it = begin(data) + 1; it != end(data); ++it) {
-            auto& code = *it;
-            auto encoded_AC = C_AC[code.symbol];
-            stream.push_back(encoded_AC.code, encoded_AC.length);
+            auto encoded_DC = C_DC[code.symbol];
+            stream.push_back(encoded_DC.code, encoded_DC.length);
             stream << code.code;
-        }
 
-        BitstreamCr.push_back(stream);
-    }
+            for (auto it = begin(data) + 1; it != end(data); ++it) {
+                auto& code = *it;
+                auto encoded_AC = C_AC[code.symbol];
+                stream.push_back(encoded_AC.code, encoded_AC.length);
+                stream << code.code;
+            }
+
+            BitstreamCr.push_back(stream);
+        }
+    });
+
+    // wait for results
+    f1.get();
+    f2.get();
+    f3.get();
 }
 
 void Image::writeJPEG(std::wstring file)
@@ -866,6 +888,7 @@ void Image::writeJPEG(std::wstring file)
             .setupCr(sDHT::Second, sDHT::Second)
         ;
 
+    // todo: interleve channels if we did subsampling
     Bitstream stream;
     for (auto i = 0U; i < BitstreamY.size(); ++i) {
         stream << BitstreamY[i] << BitstreamCb[i] << BitstreamCr[i];

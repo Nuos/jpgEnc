@@ -144,6 +144,7 @@ inline std::vector<RLE_PAIR> RLE_AC(const std::vector<int> &data) {
 }
 
 // takes an 8x8 quantized DCT block
+// and does an RLE on the zigzag sorted values
 inline std::vector<RLE_PAIR> RLE_AC(const matrix<int> &data) {
     assert(data.size1() == data.size2());
     assert(data.size1() == 8);
