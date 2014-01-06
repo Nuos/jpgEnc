@@ -5,6 +5,7 @@
 #include <sstream>
 #include <future>
 #include <omp.h>
+#include <future>
 
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/matrix_proxy.hpp>
@@ -660,38 +661,48 @@ void Image::doRLEandCategoryCoding() {
     CategoryCodeCb.reserve(QCb.size1() / 8 * QCb.size2() / 8);
     CategoryCodeCr.reserve(QCr.size1() / 8 * QCr.size2() / 8);
 
-    for (int h = 0; h < height; h += blocksize) {
-        for (int w = 0; w < width; w += blocksize) {
-            // generate slices for data source and the destination of the dct result
-            const auto slice_src = subrange(QY, h, h + blocksize, w, w + blocksize);
+    auto f1 = std::async([&]() {
+        for (int h = 0; h < height; h += blocksize) {
+            for (int w = 0; w < width; w += blocksize) {
+                // generate slices for data source and the destination of the dct result
+                const auto slice_src = subrange(QY, h, h + blocksize, w, w + blocksize);
 
-            auto rle_data = RLE_AC(slice_src);
-            auto encoded_coeffs = encode_category(rle_data);
-            CategoryCodeY.push_back(encoded_coeffs);
+                auto rle_data = RLE_AC(slice_src);
+                auto encoded_coeffs = encode_category(rle_data);
+                CategoryCodeY.push_back(encoded_coeffs);
+            }
         }
-    }
+    });
 
-    for (int h = 0; h < subsample_height; h += blocksize) {
-        for (int w = 0; w < subsample_width; w += blocksize) {
-            // generate slices for data source and the destination of the dct result
-            const auto slice_src = subrange(QCb, h, h + blocksize, w, w + blocksize);
+    auto f2 = std::async([&]() {
+        for (int h = 0; h < subsample_height; h += blocksize) {
+            for (int w = 0; w < subsample_width; w += blocksize) {
+                // generate slices for data source and the destination of the dct result
+                const auto slice_src = subrange(QCb, h, h + blocksize, w, w + blocksize);
 
-            auto rle_data = RLE_AC(slice_src);
-            auto encoded_coeffs = encode_category(rle_data);
-            CategoryCodeCb.push_back(encoded_coeffs);
+                auto rle_data = RLE_AC(slice_src);
+                auto encoded_coeffs = encode_category(rle_data);
+                CategoryCodeCb.push_back(encoded_coeffs);
+            }
         }
-    }
+    });
 
-    for (int h = 0; h < subsample_height; h += blocksize) {
-        for (int w = 0; w < subsample_width; w += blocksize) {
-            // generate slices for data source and the destination of the dct result
-            const auto slice_src = subrange(QCr, h, h + blocksize, w, w + blocksize);
+    auto f3 = std::async([&]() {
+        for (int h = 0; h < subsample_height; h += blocksize) {
+            for (int w = 0; w < subsample_width; w += blocksize) {
+                // generate slices for data source and the destination of the dct result
+                const auto slice_src = subrange(QCr, h, h + blocksize, w, w + blocksize);
 
-            auto rle_data = RLE_AC(slice_src);
-            auto encoded_coeffs = encode_category(rle_data);
-            CategoryCodeCr.push_back(encoded_coeffs);
+                auto rle_data = RLE_AC(slice_src);
+                auto encoded_coeffs = encode_category(rle_data);
+                CategoryCodeCr.push_back(encoded_coeffs);
+            }
         }
-    }
+    });
+
+    f1.get();
+    f2.get();
+    f3.get();
 }
 
 void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
