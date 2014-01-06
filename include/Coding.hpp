@@ -193,6 +193,40 @@ inline bool operator==(const Category_Code &left, const Category_Code &right) {
     return (left.symbol == right.symbol) && (left.code == right.code);
 }
 
+inline void getCategoryAndCode(int value, short &_category, Bitstream &_code) {
+    if (value == 0) {
+        _category = 0;
+        _code = Bitstream();
+        return;
+    }
+
+    unsigned short category = 1;
+    auto bound = 2l;
+    while (category < 16) {
+        auto upper_bound = bound - 1;
+        auto lower_bound = (bound >> 1);
+        auto bound_diff = upper_bound - lower_bound;
+
+        auto abs_val = abs(value);
+        if (abs_val >= lower_bound && abs_val <= upper_bound) {
+            // got category, generate code
+
+            auto offset = 0l;
+            if (value < 0)
+                offset = upper_bound - abs_val;
+            else
+                offset = value;
+
+            _category = category;
+            _code = Bitstream(offset, category);
+        }
+
+        bound <<= 1;
+        ++category;
+    }
+
+    assert(!"Shouldn't happen!");
+}
 
 inline std::pair<short, Bitstream> getCategoryAndCode(int value) {
     if (value == 0)
@@ -232,10 +266,9 @@ inline std::vector<Category_Code> encode_category(const std::vector<RLE_PAIR> &d
     category_list.reserve(data.size());
 
     for (const auto& rle_pair : data) {
-        auto data = getCategoryAndCode(rle_pair.value);
-
-        auto category = data.first;
-        auto &code = data.second;
+        short category = 0;
+        Bitstream code;
+        getCategoryAndCode(rle_pair.value, category, code);
 
         assert(rle_pair.num_zeros_before < 16);
         assert(category < 16);

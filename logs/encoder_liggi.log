@@ -1,0 +1,16 @@
+--------------------------------------------------------------------------
+| Full encoder tests
+--------------------------------------------------------------------------
+SHA-1: cc4f57460540d8fd39ca2f75be201eaa057a3c82
+* parallel huffman coding
+
+C:\Projects\Cpp\jpgEnc\build-x64\src\test>Release\jpgEncTest_PERF.exe
+>>> test_encode_draigoch:
+ took 1878 ms
+
+SHA-1: 3fc79c121bfd234651ce0fbc3705d43f212db375
+* faster version for getCategoryAndCode
+
+C:\Projects\Cpp\jpgEnc\build-x64\src\test>Release\jpgEncTest_PERF.exe
+>>> test_encode_draigoch:
+ took 1732 ms
