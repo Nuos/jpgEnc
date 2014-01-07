@@ -219,6 +219,7 @@ inline void getCategoryAndCode(int value, short &_category, Bitstream &_code) {
 
             _category = category;
             _code = Bitstream(offset, category);
+            return;
         }
 
         bound <<= 1;
