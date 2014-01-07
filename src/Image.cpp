@@ -468,20 +468,23 @@ Image loadPPM(std::string path) {
     }
 
 
-    img.real_height = img.height;
-    img.real_width = img.width;
+    img.real_height = height;
+    img.real_width = width;
 
-    //adjust size of our image for using 8x8 blocks
-    if (width % 8 != 0 || height % 8 != 0)
+    //adjust size of our image for using 16x16 blocks
+    if (width % 16 != 0 || height % 16 != 0)
     {
-        if (img.width % 8 != 0) {
-            img.width   += 8;
-            img.width   -= img.width % 8;
+        if (img.width % 16 != 0) {
+            img.width += 16;
+            img.width -= img.width % 16;
         }
-        if (img.height % 8 != 0) {
-            img.height += 8;
-            img.height -= img.height % 8;
+        if (img.height % 16 != 0) {
+            img.height += 16;
+            img.height -= img.height % 16;
         }
+
+        img.subsample_height = img.height;
+        img.subsample_width = img.width;
 
         img.R.resize(img.height, img.width, true);
         img.G.resize(img.height, img.width, true);
@@ -664,7 +667,9 @@ void Image::doRLEandCategoryCoding() {
     // the data in the CategoryCodeXX vectors must be sequential correct (left to right, then top to bottom),
     // so no parallel execution of the loops possible
     // but we can run the rle parallel on the different channels
-
+    if (subsample_height != subsample_width) {
+        int a = 2;
+    }
     auto f1 = std::async([&]() {
         for (int h = 0; h < height; h += blocksize) {
             for (int w = 0; w < width; w += blocksize) {

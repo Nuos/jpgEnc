@@ -23,25 +23,25 @@ BOOST_AUTO_TEST_CASE(image_loading_test) {
     BOOST_CHECK(image.B(0, 0) == 0);
 
     // out of bounds indexing
-    BOOST_CHECK(image.R(7, 0) == 255);
-    BOOST_CHECK(image.G(7, 0) == 0);
-    BOOST_CHECK(image.B(7, 0) == 255);
+    BOOST_CHECK(image.R(15, 0) == 255);
+    BOOST_CHECK(image.G(15, 0) == 0);
+    BOOST_CHECK(image.B(15, 0) == 255);
 
-    BOOST_CHECK(image.R(0, 7) == 255);
-    BOOST_CHECK(image.G(0, 7) == 0);
-    BOOST_CHECK(image.B(0, 7) == 255);
+    BOOST_CHECK(image.R(0, 15) == 255);
+    BOOST_CHECK(image.G(0, 15) == 0);
+    BOOST_CHECK(image.B(0, 15) == 255);
 
-    BOOST_CHECK(image.R(1, 7) == 0);
-    BOOST_CHECK(image.G(1, 7) == 0);
-    BOOST_CHECK(image.B(1, 7) == 0);
+    BOOST_CHECK(image.R(1, 15) == 0);
+    BOOST_CHECK(image.G(1, 15) == 0);
+    BOOST_CHECK(image.B(1, 15) == 0);
 
-    BOOST_CHECK(image.R(7, 1) == 0);
-    BOOST_CHECK(image.G(7, 1) == 0);
-    BOOST_CHECK(image.B(7, 1) == 0);
+    BOOST_CHECK(image.R(15, 1) == 0);
+    BOOST_CHECK(image.G(15, 1) == 0);
+    BOOST_CHECK(image.B(15, 1) == 0);
 
-    BOOST_CHECK(image.R(7, 7) == 0);
-    BOOST_CHECK(image.G(7, 7) == 0);
-    BOOST_CHECK(image.B(7, 7) == 0);
+    BOOST_CHECK(image.R(15, 15) == 0);
+    BOOST_CHECK(image.G(15, 15) == 0);
+    BOOST_CHECK(image.B(15, 15) == 0);
 }
 
 BOOST_AUTO_TEST_CASE(image_color_conv_test) {
@@ -79,15 +79,15 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S444);
-        BOOST_CHECK_EQUAL(image.B.size2(), 8);
-        BOOST_CHECK_EQUAL(image.B.size1(), 8);
+        BOOST_CHECK_EQUAL(image.B.size2(), 16);
+        BOOST_CHECK_EQUAL(image.B.size1(), 16);
     }
 
     {
         auto image = image_orig;
         image.applySubsampling(Image::S422);
-        BOOST_CHECK_EQUAL(image.B.size2(), 4);
-        BOOST_CHECK_EQUAL(image.B.size1(), 8);
+        BOOST_CHECK_EQUAL(image.B.size2(), 8);
+        BOOST_CHECK_EQUAL(image.B.size1(), 16);
 
         // B channel:
         // 0 0 
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S411);
-        BOOST_CHECK_EQUAL(image.B.size2(), 2);
-        BOOST_CHECK_EQUAL(image.B.size1(), 8);
+        BOOST_CHECK_EQUAL(image.B.size2(), 4);
+        BOOST_CHECK_EQUAL(image.B.size1(), 16);
 
         // B channel:
         // 0
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420);
-        BOOST_CHECK_EQUAL(image.B.size2(), 4);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 8);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
         
         // B channel:
         // 0 0
@@ -154,8 +154,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_m);
-        BOOST_CHECK_EQUAL(image.B.size2(), 4);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 8);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
         
         // B channel:
         // 1.75 3.75
@@ -177,8 +177,8 @@ BOOST_AUTO_TEST_CASE(image_subsampling_test)
     {
         auto image = image_orig;
         image.applySubsampling(Image::S420_lm);
-        BOOST_CHECK_EQUAL(image.B.size2(), 4);
-        BOOST_CHECK_EQUAL(image.B.size1(), 4);
+        BOOST_CHECK_EQUAL(image.B.size2(), 8);
+        BOOST_CHECK_EQUAL(image.B.size1(), 8);
         
         // B channel:
         // 0   0
