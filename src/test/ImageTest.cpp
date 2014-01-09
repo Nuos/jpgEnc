@@ -278,6 +278,12 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
 
         img = loadPPM("res/tester_RGB_26x19.ppm");
         img.writeJPEG(L"tester_RGB_26x19_own_encoder.jpg");
+
+        img = loadPPM("res/tester_white_gray_black_32x32.ppm");
+        img.writeJPEG(L"tester_white_gray_black_32x32_own_encoder.jpg");
+
+        img = loadPPM("res/tester_text_32x32.ppm");
+        img.writeJPEG(L"tester_text_32x32_own_encoder.jpg");
     }
 
 #if NDEBUG

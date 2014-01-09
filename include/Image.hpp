@@ -110,6 +110,6 @@ private:
     matrix<PixelDataType> one, two, three;
     matrix<PixelDataType> DctY, DctCb, DctCr;
     matrix<int> QY, QCb, QCr;
-    std::vector<std::vector<Category_Code>> CategoryCodeY, CategoryCodeCb, CategoryCodeCr;
-    std::vector<Bitstream> BitstreamY, BitstreamCb, BitstreamCr;
+    matrix<std::vector<Category_Code>> CategoryCodeY, CategoryCodeCb, CategoryCodeCr;
+    matrix<Bitstream> BitstreamY, BitstreamCb, BitstreamCr;
 };

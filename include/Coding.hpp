@@ -150,6 +150,7 @@ inline std::vector<RLE_PAIR> RLE_AC(const matrix<int> &data) {
     assert(data.size1() == 8);
 
     std::vector<RLE_PAIR> AC_rle;
+    // dc part, run length is always 0
     AC_rle.push_back(RLE_PAIR(0, data(0, 0)));
 
 
@@ -273,6 +274,7 @@ inline std::vector<Category_Code> encode_category(const std::vector<RLE_PAIR> &d
 
         assert(rle_pair.num_zeros_before < 16);
         assert(category < 16);
+        // rle_pair.num_zeros_before == 0 for the DC value
         auto symbol = (rle_pair.num_zeros_before << 4) | category;
 
         category_list.emplace_back(symbol, code);
