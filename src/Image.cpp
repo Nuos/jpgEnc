@@ -587,7 +587,7 @@ void Image::applyDCT(DCTMode mode)
     }
 }
 
-void Image::applyQuantization(const matrix<Byte> &quantization_table) {
+void Image::applyQuantization(const matrix<Byte>& qtable_y, const matrix<Byte>& qtable_c) {
     assert(quantization_table.size1() == 8);
     assert(quantization_table.size2() == 8);
 
@@ -601,7 +601,7 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctY, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QY, range(h, h + blocksize), range(w, w + blocksize));
-            slice_dst.assign(quantize(slice_src, quantization_table));
+            slice_dst.assign(quantize(slice_src, qtable_y));
         }
     }
 
@@ -611,7 +611,7 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctCb, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QCb, range(h, h + blocksize), range(w, w + blocksize));
-            slice_dst.assign(quantize(slice_src, quantization_table));
+            slice_dst.assign(quantize(slice_src, qtable_c));
         }
     }
 
@@ -621,7 +621,7 @@ void Image::applyQuantization(const matrix<Byte> &quantization_table) {
             // generate slices for data source and the destination of the dct result
             const matrix_range<matrix<PixelDataType>> slice_src(DctCr, range(h, h + blocksize), range(w, w + blocksize));
             matrix_range<matrix<int>> slice_dst(QCr, range(h, h + blocksize), range(w, w + blocksize));
-            slice_dst.assign(quantize(slice_src, quantization_table));
+            slice_dst.assign(quantize(slice_src, qtable_c));
         }
     }
 }
@@ -830,18 +830,28 @@ void Image::writeJPEG(std::wstring file)
     applyDCT(DCTMode::Arai);
 
     // quantization
-    matrix<Byte> quantization_table = from_vector<Byte>({
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 1, 1, 1, 1, 1, 1,
+    const auto qtable_y = from_vector<int>({
+        16, 11, 10, 16, 24, 40, 51, 61,
+        12, 12, 14, 19, 26, 58, 60, 55,
+        14, 13, 16, 24, 40, 57, 69, 56,
+        14, 17, 22, 29, 51, 87, 80, 62,
+        18, 22, 37, 56, 68, 109, 103, 77,
+        24, 35, 55, 64, 81, 104, 113, 92,
+        49, 64, 78, 87, 103, 121, 120, 101,
+        72, 92, 95, 98, 112, 100, 103, 99
+    });
+    const auto qtable_c = from_vector<int>({
+        17, 18, 24, 47, 99, 99, 99, 99,
+        18, 21, 26, 66, 99, 99, 99, 99,
+        24, 26, 56, 99, 99, 99, 99, 99,
+        47, 66, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99,
+        99, 99, 99, 99, 99, 99, 99, 99
     });
 
-    applyQuantization(quantization_table);
+    applyQuantization(qtable_y, qtable_c);
 
     // DC difference coding
     applyDCdifferenceCoding();
@@ -892,15 +902,16 @@ void Image::writeJPEG(std::wstring file)
     doHuffmanEncoding(Y_DC_encoder, Y_AC_encoder, C_DC_encoder, C_AC_encoder);
 
     // jpeg needs zigzag sorted quantization table
-    auto zigzag_qtable = zigzag<Byte>(quantization_table);
+    auto zigzag_qtable_y = zigzag<Byte>(qtable_y);
+    auto zigzag_qtable_c = zigzag<Byte>(qtable_c);
 
     std::ofstream jpeg(file, std::ios::binary);
 
     using namespace Segment;
     jpeg << sSOI()
         << sAPP0()
-        << sDQT().pushQuantizationTable(zigzag_qtable, ComponentSetup::QuantizationTableID::Zero)
-        << sDQT().pushQuantizationTable(zigzag_qtable, ComponentSetup::QuantizationTableID::One)
+        << sDQT().pushQuantizationTable(zigzag_qtable_y, ComponentSetup::QuantizationTableID::Zero)
+        << sDQT().pushQuantizationTable(zigzag_qtable_c, ComponentSetup::QuantizationTableID::One)
         << sSOF0()
             .setImageSizeX(real_width)
             .setImageSizeY(real_height)

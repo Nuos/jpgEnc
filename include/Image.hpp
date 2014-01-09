@@ -79,7 +79,7 @@ public:
     void applySubsampling(SubsamplingMode mode);
 
     void applyDCT(DCTMode mode);
-    void applyQuantization(const matrix<Byte> &quantization_table);
+    void applyQuantization(const matrix<Byte>& q_table_y, const matrix<Byte>& q_table_c);
     void applyDCdifferenceCoding();
     void doZigZagSorting();
     void doRLEandCategoryCoding();
