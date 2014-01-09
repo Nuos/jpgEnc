@@ -588,8 +588,10 @@ void Image::applyDCT(DCTMode mode)
 }
 
 void Image::applyQuantization(const matrix<Byte>& qtable_y, const matrix<Byte>& qtable_c) {
-    assert(quantization_table.size1() == 8);
-    assert(quantization_table.size2() == 8);
+    assert(qtable_y.size1() == 8);
+    assert(qtable_y.size2() == 8);
+    assert(qtable_c.size1() == 8);
+    assert(qtable_c.size2() == 8);
 
     QY = zero_matrix<int>(DctY.size1(), DctY.size2());
     QCb = zero_matrix<int>(DctCb.size1(), DctCb.size2());
