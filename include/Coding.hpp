@@ -101,7 +101,7 @@ struct RLE_PAIR {
     int value;
 
     RLE_PAIR() = default;
-    RLE_PAIR(short zeros, int _value) : num_zeros_before(zeros), value(_value) { assert(zeros <= 16); }
+    RLE_PAIR(short zeros, int _value) : num_zeros_before(zeros), value(_value) { assert(zeros < 16); }
 };
 
 inline bool operator==(const RLE_PAIR &left, const RLE_PAIR &right) {
@@ -202,17 +202,16 @@ inline void getCategoryAndCode(int value, short &_category, Bitstream &_code) {
     }
 
     unsigned short category = 1;
-    auto bound = 2l;
+    auto bound = 2L;
     while (category < 16) {
         auto upper_bound = bound - 1;
         auto lower_bound = (bound >> 1);
-        auto bound_diff = upper_bound - lower_bound;
 
         auto abs_val = abs(value);
         if (abs_val >= lower_bound && abs_val <= upper_bound) {
             // got category, generate code
 
-            auto offset = 0l;
+            auto offset = 0L;
             if (value < 0)
                 offset = upper_bound - abs_val;
             else

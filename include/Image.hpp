@@ -89,7 +89,7 @@ public:
                            SymbolCodeMap &C_AC);
 
     // JPEG SEGMENTS
-    void writeJPEG(std::wstring file);
+    void writeJPEG(std::string file);
 
     // HELPER
 private:

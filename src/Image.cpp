@@ -821,7 +821,7 @@ void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
     f3.get();
 }
 
-void Image::writeJPEG(std::wstring file)
+void Image::writeJPEG(std::string file)
 {
     // color conversion to YCbCr
     *this = convertToColorSpace(YCbCr);
@@ -936,7 +936,7 @@ void Image::writeJPEG(std::wstring file)
     for (auto i = 0U; i < BitstreamCb.size1(); ++i) {
         for (auto j = 0U; j < BitstreamCb.size2(); ++j) {
             stream << BitstreamY(2*i,   2*j);
-            stream << BitstreamY(2*i, 2*j+1);
+            stream << BitstreamY(2*i,   2*j+1);
             stream << BitstreamY(2*i+1, 2*j);
             stream << BitstreamY(2*i+1, 2*j+1);
 
