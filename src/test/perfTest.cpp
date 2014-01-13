@@ -91,7 +91,7 @@ void test_jpeg_segment_writing()
 {
     PRINT_TEST_NAME;
     auto image = loadPPM("res/Draigoch_p6.ppm");
-    timeFn("writing jpeg segments", [&]() { image.writeJPEG(L"Draigoch.jpg"); });
+    timeFn("writing jpeg segments", [&]() { image.writeJPEG("Draigoch.jpg"); });
 }
 
 // generate image used for performance tests in assignment 4.4c
@@ -158,7 +158,7 @@ void test_encode_draigoch() {
     PRINT_TEST_NAME;
 
     auto image = loadPPM("res/Draigoch_p6.ppm");
-    timeFn([&]() { image.writeJPEG(L"Draigoch.jpeg"); });
+    timeFn([&]() { image.writeJPEG("Draigoch.jpeg"); });
 }
 
 int main(int argc, const char** argv)

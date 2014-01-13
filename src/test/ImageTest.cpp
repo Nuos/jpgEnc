@@ -227,70 +227,70 @@ BOOST_AUTO_TEST_CASE(jpeg_segments_test)
     {
         // one color 8x8
         auto img = loadPPM("res/tester_black.ppm");
-        img.writeJPEG(L"tester_black_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_black_8x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_white.ppm");
-        img.writeJPEG(L"tester_white_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_white_8x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_red.ppm");
-        img.writeJPEG(L"tester_red_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_red_8x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_green.ppm");
-        img.writeJPEG(L"tester_green_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_green_8x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_blue.ppm");
-        img.writeJPEG(L"tester_blue_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_blue_8x8_own_encoder.jpg");
 
         // one color 4x4
         img = loadPPM("res/tester_black_4x4.ppm");
-        img.writeJPEG(L"tester_black_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_black_4x4_own_encoder.jpg");
 
         img = loadPPM("res/tester_white_4x4.ppm");
-        img.writeJPEG(L"tester_white_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_white_4x4_own_encoder.jpg");
 
         img = loadPPM("res/tester_red_4x4.ppm");
-        img.writeJPEG(L"tester_red_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_red_4x4_own_encoder.jpg");
 
         img = loadPPM("res/tester_green_4x4.ppm");
-        img.writeJPEG(L"tester_green_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_green_4x4_own_encoder.jpg");
 
         img = loadPPM("res/tester_blue_4x4.ppm");
-        img.writeJPEG(L"tester_blue_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_blue_4x4_own_encoder.jpg");
 
         // various
         img = loadPPM("res/tester_p3.ppm");
-        img.writeJPEG(L"tester_p3_4x4_own_encoder.jpg");
+        img.writeJPEG("tester_p3_4x4_own_encoder.jpg");
 
         img = loadPPM("res/tester_p3_8x8.ppm");
-        img.writeJPEG(L"tester_p3_8x8_own_encoder.jpg");
+        img.writeJPEG("tester_p3_8x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_p3_12x8.ppm");
-        img.writeJPEG(L"tester_p3_12x8_own_encoder.jpg");
+        img.writeJPEG("tester_p3_12x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_green_12x8.ppm");
-        img.writeJPEG(L"tester_green_12x8_own_encoder.jpg");
+        img.writeJPEG("tester_green_12x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_green_blue_12x8.ppm");
-        img.writeJPEG(L"tester_green_blue_12x8_own_encoder.jpg");
+        img.writeJPEG("tester_green_blue_12x8_own_encoder.jpg");
 
         img = loadPPM("res/tester_green_blue_8x12.ppm");
-        img.writeJPEG(L"tester_green_blue_8x12_own_encoder.jpg");
+        img.writeJPEG("tester_green_blue_8x12_own_encoder.jpg");
 
         img = loadPPM("res/tester_RGB_26x19.ppm");
-        img.writeJPEG(L"tester_RGB_26x19_own_encoder.jpg");
+        img.writeJPEG("tester_RGB_26x19_own_encoder.jpg");
 
         img = loadPPM("res/tester_white_gray_black_32x32.ppm");
-        img.writeJPEG(L"tester_white_gray_black_32x32_own_encoder.jpg");
+        img.writeJPEG("tester_white_gray_black_32x32_own_encoder.jpg");
 
         img = loadPPM("res/tester_text_32x32.ppm");
-        img.writeJPEG(L"tester_text_32x32_own_encoder.jpg");
+        img.writeJPEG("tester_text_32x32_own_encoder.jpg");
     }
 
 #if NDEBUG
     // writing draigoch jpeg segments
     {
         auto image = loadPPM("res/Draigoch_p6.ppm");
-        image.writeJPEG(L"Draigoch.jpeg");
+        image.writeJPEG("Draigoch.jpeg");
     }
 #endif
 
