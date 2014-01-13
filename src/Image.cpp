@@ -830,6 +830,9 @@ void Image::writeJPEG(std::string file)
     applySubsampling(SubsamplingMode::S420_m);
 
     applyDCT(DCTMode::Arai);
+    Y  = zero_matrix<PixelDataType>(0, 0);
+    Cb = zero_matrix<PixelDataType>(0, 0);
+    Cr = zero_matrix<PixelDataType>(0, 0);
 
     // quantization
     const auto qtable_y = from_vector<int>({
@@ -855,11 +858,19 @@ void Image::writeJPEG(std::string file)
 
     applyQuantization(qtable_y, qtable_c);
 
+    DctY  = zero_matrix<PixelDataType>(0, 0);
+    DctCb = zero_matrix<PixelDataType>(0, 0);
+    DctCr = zero_matrix<PixelDataType>(0, 0);
+
     // DC difference coding
     applyDCdifferenceCoding();
     
     // zigzag, RLE and category encoding
     doRLEandCategoryCoding();
+
+    QY  = zero_matrix<int>(0, 0);
+    QCb = zero_matrix<int>(0, 0);
+    QCr = zero_matrix<int>(0, 0);
 
     // generate Huffman tables
     std::vector<int> Y_DC_symbols, Y_AC_symbols;
