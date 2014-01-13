@@ -1,5 +1,6 @@
 #include "Image.hpp"
 
+#include <chrono>
 #include <array>
 #include <streambuf>
 #include <sstream>
@@ -18,6 +19,8 @@ using boost::numeric::ublas::matrix_range;
 using boost::numeric::ublas::range;
 using boost::numeric::ublas::subrange;
 using boost::numeric::ublas::zero_matrix;
+
+using namespace std::chrono;
 
 static const auto debug = false;
 
@@ -416,6 +419,8 @@ void loadP6PPM(PPMFileBuffer& ppm, Image& img, double scale_factor) {
 
 // top level load function with a path to a ppm file
 Image loadPPM(std::string path) {
+    auto start = high_resolution_clock::now();
+
     std::ifstream::sync_with_stdio(false);
     std::ifstream ppm_file{path, std::fstream::binary};
 
@@ -526,6 +531,8 @@ Image loadPPM(std::string path) {
 
     }
 
+    auto end = high_resolution_clock::now();
+    std::cout << "PPM loading took " << duration_cast<milliseconds>(end - start).count() << " ms\n";
 
     return img;
 }
@@ -823,6 +830,11 @@ void Image::doHuffmanEncoding(SymbolCodeMap &Y_DC,
 
 void Image::writeJPEG(std::string file)
 {
+    auto start = high_resolution_clock::now();
+
+    // printing some info
+    std::cout << "Processing image size: " << real_width << "x" << real_height << std::endl;
+
     // color conversion to YCbCr
     *this = convertToColorSpace(YCbCr);
 
@@ -958,4 +970,7 @@ void Image::writeJPEG(std::string file)
     stream.fill();
     jpeg << stream;
     jpeg << sEOI();
+
+    auto end = high_resolution_clock::now();
+    std::cout << "Encoding duration: " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
 }
